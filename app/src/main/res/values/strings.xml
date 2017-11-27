@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">Z - Track</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_extra">Extras</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_record">New Activity</string>
+    <string name="action_history">View History</string>
+    <string name="action_search">Search for Route</string>
+    <string name="action_about">About Us</string>
+    <string name="action_add_marker">Add Marker!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Map</string>
+
+    <string name="activity_start">Start</string>
+    <string name="activity_pause">Pause</string>
+    <string name="activity_resume">Resume</string>
+    <string name="activity_stop">Stop</string>
+
+    <string name="stats_title">Metric</string>
+    <string name="stats_data">Data</string>
+    <string name="stats_units">Units</string>
+    
+    <string name="activity_item_time">Time</string>
+    <string name="activity_item_pace">Pace</string>
+    <string name="activity_item_topspeed">Top Speed</string>
+    <string name="activity_item_avgspeed">Avg. Speed</string>
+    <string name="activity_item_elevation">Elevation</string>
+    <string name="activity_item_distance">Distance</string>
+
+    <string-array name="units_si">
+        <item>MM:SS:mmm</item>
+        <item>km</item>
+        <item>km/hr</item>
+        <item>km/min</item>
+        <item>m</item>
+    </string-array>
+
+    <string-array name="units_en">
+        <item>MM:SS:mmm</item>
+        <item>mi</item>
+        <item>mph</item>
+        <item>mi/min</item>
+        <item>ft</item>
+    </string-array>
+
+    <string name="google_maps_key">AIzaSyBb8I4oWVH2aFEL2grfV8Cp0Y98hfyyf2U</string>
+
+</resources>
