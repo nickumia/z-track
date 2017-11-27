@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.Elevation;
+import com.csc285.android.z_track.Statistics.Location;
 import com.csc285.android.z_track.Statistics.Pace;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
@@ -61,12 +62,17 @@ public class StatisticsLab {
         stat6.setId(R.string.activity_item_avgspeed);
         stat6.setIdx(2);
 
+        Statistics stat7 = new Location();
+        stat7.setId(R.string.activity_item_location);
+        stat7.setIdx(5);
+
         mStats.add(stat4);
         mStats.add(stat3);
         mStats.add(stat5);
         mStats.add(stat6);
         mStats.add(stat1);
         mStats.add(stat2);
+        mStats.add(stat7);
     }
 
     public List<Statistics> getmStats() {

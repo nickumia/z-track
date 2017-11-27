@@ -24,12 +24,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -60,6 +62,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     private StatisticsLab statsLab;
     GoogleApiClient mClient;
     private GoogleMap mMap;
+    private LocationCallback mLocationCallback;
+
 
     boolean active = false;
     boolean save = false;
@@ -98,6 +102,16 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                     }
                 })
                 .build();
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with location data
+                    // ...
+                }
+            };
+        };
     }
 
     @Override
@@ -119,6 +133,9 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                     mMap.addMarker(new MarkerOptions().position(here).title("You are Here!"));
 //                    mMap.moveCamera(CameraUpdateFactory.newLatLng(here));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 14.0f));
+                } else {
+                    Toast error = Toast.makeText(getContext(), getString(R.string.error_location), Toast.LENGTH_SHORT);
+                    error.show();
                 }
 
             } else {
@@ -290,6 +307,10 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
             mAdapter.setmStats(stats);
             mAdapter.notifyDataSetChanged();
         }
+
+        if (mClient.isConnected()){
+            getLocation();
+        }
     }
 
     void updateUITime(){
@@ -350,6 +371,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
             case REQUEST_LOCATION_PERMISSIONS:
                 if (hasLocationPermission()) {
                     // Add Marker Function
+
                 }
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -369,17 +391,39 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         request.setInterval(0);
 
         try {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
-                    new LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            currentLocation = location;
-                        }
-                    });
+            currentLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
+//            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
+//                    new LocationListener() {
+//                        @Override
+//                        public void onLocationChanged(Location location) {
+//                            currentLocation = location;
+//                        }
+//                    });
         }catch (SecurityException xe){
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
     }
+
+    public void getGPSLocation(){
+
+    }
+//
+//    protected void createLocationRequest() {
+//        LocationRequest mLocationRequest = new LocationRequest();
+//        mLocationRequest.setInterval(10000);
+//        mLocationRequest.setFastestInterval(5000);
+//        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//    }
+//
+//    private void startLocationUpdates() {
+//        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+//                mLocationCallback,
+//                null /* Looper */);
+//    }
+//
+//    private void stopLocationUpdates() {
+//        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+//    }
 
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -404,12 +448,17 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onResume() {
         super.onResume();
+//        if (mRequestingLocationUpdates) {
+//            startLocationUpdates();
+//        }
+
 //        mSensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     public void onPause() {
         super.onPause();
+//        stopLocationUpdates();
         mSensorManager.unregisterListener(this);
     }
 

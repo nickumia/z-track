@@ -29,6 +29,9 @@
     <string name="activity_item_avgspeed">Avg. Speed</string>
     <string name="activity_item_elevation">Elevation</string>
     <string name="activity_item_distance">Distance</string>
+    <string name="activity_item_location">Location</string>
+
+    <string name="error_location">Location not found. Please Try Again.</string>
 
     <string-array name="units_si">
         <item>MM:SS:mmm</item>
@@ -36,6 +39,7 @@
         <item>km/hr</item>
         <item>km/min</item>
         <item>m</item>
+        <item>°</item>
     </string-array>
 
     <string-array name="units_en">
@@ -44,6 +48,7 @@
         <item>mph</item>
         <item>mi/min</item>
         <item>ft</item>
+        <item>°</item>
     </string-array>
 
     <string name="google_maps_key">AIzaSyBb8I4oWVH2aFEL2grfV8Cp0Y98hfyyf2U</string>

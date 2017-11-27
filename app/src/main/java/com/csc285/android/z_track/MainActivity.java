@@ -59,19 +59,15 @@ public class MainActivity extends AppCompatActivity
             fm.replace(R.id.fragment_container, ActivityFragment.newInstance());
             fm.addToBackStack(null).commit();
         } else if (id == R.id.nav_history) {
-//            HistoryFragment hist = new HistoryFragment();
             fm.replace(R.id.fragment_container, HistoryFragment.newInstance());
             fm.addToBackStack(null).commit();
         } else if (id == R.id.nav_search) {
-//            SearchFragment search = new SearchFragment();
             fm.replace(R.id.fragment_container, SearchFragment.newInstance());
             fm.addToBackStack(null).commit();
         } else if (id == R.id.nav_about) {
-//            AboutFragment about = new AboutFragment();
             fm.replace(R.id.fragment_container, AboutFragment.newInstance());
             fm.addToBackStack(null).commit();
         } else if (id == R.id.nav_settings) {
-//            SettingsFragment set = new SettingsFragment();
             fm.replace(R.id.fragment_container, SettingsFragment.newInstance());
             fm.addToBackStack(null).commit();
         }
