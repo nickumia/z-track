@@ -1,7 +1,5 @@
 package com.csc285.android.z_track;
 
-import android.content.Context;
-
 import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.Elevation;
 import com.csc285.android.z_track.Statistics.Location;
@@ -11,32 +9,38 @@ import com.csc285.android.z_track.Statistics.Time;
 import com.csc285.android.z_track.Statistics.Velocity;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
+import java.util.UUID;
 
 /**
- * Created by nicku on 11/17/2017.
+ * Created by nicku on 11/27/2017.
+ *
+ * Event
+ *      ID      :   Unique Identifier
+ *      Date    :   MM/DD/YYYY
+ *      Time    :   Start Time
+ *      Stats   :
+ *          ID      :   Unique Identifier (Time, Distance, Pace ...)
+ *          Units   :   Units
+ *          Idx     :   Index of ID in stats array
+ *          ...     :   Unique Statistic Information
+ *
  */
 
-public class StatisticsLab {
-    private static StatisticsLab sStatisticsLab;
-    private List<Statistics> mStats;
+public class Event {
 
-    private Integer[] Labels = {
-            R.string.activity_item_time,
-            R.string.activity_item_pace,
-            R.string.activity_item_topspeed,
-            R.string.activity_item_avgspeed,
-            R.string.activity_item_elevation
-    };
+    private UUID mId;
+    private Date mDate;
+    private long mTime;
+    private ArrayList<Statistics> mStats = new ArrayList<>();
 
-    public static StatisticsLab get(Context context) {
-        if (sStatisticsLab == null) {
-            sStatisticsLab = new StatisticsLab(context);
-        }
-        return sStatisticsLab;
+    Event(){
+        this(UUID.randomUUID());
     }
-    private StatisticsLab(Context context) {
-        mStats = new ArrayList<>();
+
+    public Event(UUID id) {
+        mId = id;
+        mDate = new Date();
 
         Statistics stat1 = new Distance();
         stat1.setId(R.string.activity_item_distance);
@@ -75,7 +79,31 @@ public class StatisticsLab {
         mStats.add(stat7);
     }
 
-    public List<Statistics> getmStats() {
+    public UUID getmId() {
+        return mId;
+    }
+
+    public void setmId(UUID mName) {
+        this.mId = mName;
+    }
+
+    public Date getmDate() {
+        return mDate;
+    }
+
+    public void setmDate(Date mDate) {
+        this.mDate = mDate;
+    }
+
+    public long getmTime() {
+        return mTime;
+    }
+
+    public void setmTime(long mTime) {
+        this.mTime = mTime;
+    }
+
+    public ArrayList<Statistics> getmStats() {
         return mStats;
     }
 
@@ -87,4 +115,6 @@ public class StatisticsLab {
         }
         return null;
     }
+
+
 }

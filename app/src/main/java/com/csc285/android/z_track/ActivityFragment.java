@@ -42,6 +42,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Created by nick on 11/16/2017.
@@ -51,6 +52,7 @@ import java.util.Locale;
 public class ActivityFragment extends Fragment implements SensorEventListener, OnMapReadyCallback {
 
     private static final String TAG = "ActivityFragment";
+    private static final String ARG_EVENT_ID = "event_id";
     FloatingActionButton mStartActivity;
     FloatingActionButton mPauseActivity;
     FloatingActionButton mResumeActivity;
@@ -59,7 +61,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     private RecyclerView mStatsRecyclerView;
     private StatsAdapter mAdapter;
     private SensorManager mSensorManager;
-    private StatisticsLab statsLab;
+    private Event mEvent;
     GoogleApiClient mClient;
     private GoogleMap mMap;
     private LocationCallback mLocationCallback;
@@ -77,14 +79,27 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     Time now;
     Location currentLocation;
 
-    public static ActivityFragment newInstance()
+    public static ActivityFragment newInstance(UUID eventId)
     {
-        return new ActivityFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_EVENT_ID, eventId.toString());
+        ActivityFragment fragment = new ActivityFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        UUID crimeId = (UUID) getActivity().getIntent().getSerializableExtra(EventActivity.EXTRA_EVENT_ID);
+        if (getArguments() != null) {
+            UUID crimeId = UUID.fromString(getArguments().getString(ARG_EVENT_ID));
+            mEvent = EventLab.get(getActivity()).getEvent(crimeId);
+        } else {
+            mEvent = new Event();
+        }
+
         setHasOptionsMenu(true);
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         timer = new Handler();
@@ -206,7 +221,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         mStatsRecyclerView.setNestedScrollingEnabled(false);
         updateUI();
 
-        now = (Time)statsLab.getStat(R.string.activity_item_time);
+        now = (Time)mEvent.getStat(R.string.activity_item_time);
 
 
         // Old Issue solved from : https://stackoverflow.com/a/33525515
@@ -297,8 +312,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     }
 
     private void updateUI() {
-        statsLab = StatisticsLab.get(getActivity());
-        List<Statistics> stats = statsLab.getmStats();
+//        eventLab = EventLab.get(getActivity());
+        List<Statistics> stats = mEvent.getmStats();
 
         if (mAdapter == null) {
             mAdapter = new StatsAdapter(stats);
@@ -351,7 +366,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     public Runnable runnable = new Runnable() {
 
         public void run() {
-            Time now = (Time)statsLab.getStat(R.string.activity_item_time);
+            Time now = (Time)mEvent.getStat(R.string.activity_item_time);
             now.updateTime();
             timer.postDelayed(this, 0);
             updateUI();

@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String A_TAG = "ActivityFragment";
+    private static final String EXTRA_EVENT_ID = "com.csc285.android.z_track.event_id";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,8 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction fm = getSupportFragmentManager().beginTransaction();
 
         if (id == R.id.nav_record) {
-            fm.replace(R.id.fragment_container, ActivityFragment.newInstance());
+            Event m = new Event();
+            fm.replace(R.id.fragment_container, ActivityFragment.newInstance(m.getmId()));
             fm.addToBackStack(null).commit();
         } else if (id == R.id.nav_history) {
             fm.replace(R.id.fragment_container, HistoryFragment.newInstance());
