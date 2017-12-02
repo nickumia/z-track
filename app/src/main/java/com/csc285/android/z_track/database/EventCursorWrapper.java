@@ -5,7 +5,7 @@ import android.database.CursorWrapper;
 
 import com.csc285.android.z_track.Event;
 import com.csc285.android.z_track.Statistics.Elevation;
-import com.csc285.android.z_track.Statistics.Location;
+import com.csc285.android.z_track.Statistics.LocationA;
 import com.csc285.android.z_track.Statistics.Velocity;
 
 import java.util.Date;
@@ -25,7 +25,7 @@ public class EventCursorWrapper extends CursorWrapper
     public Event getEvent() {
         String uuidString = getString(getColumnIndex(EventDbSchema.EventTable.Cols.UUID));
         long date = getLong(getColumnIndex(EventDbSchema.EventTable.Cols.DATE));
-        long time = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME));
+//        long time = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME));
         float distance = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.DISTANCE));
         float pace = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.PACE));
         float elevation = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.ELEVATION));
@@ -41,7 +41,7 @@ public class EventCursorWrapper extends CursorWrapper
 
         Event event = new Event(UUID.fromString(uuidString));
         event.setmDate(new Date(date));
-        event.setmTime(time);
+//        event.setmTime(time);
 //        event.setmStats(distance, EventDbSchema.EventTable.Cols.DISTANCE);
 //        event.setmStats(pace, EventDbSchema.EventTable.Cols.PACE);
 ////        event.setmStats(elevation, EventDbSchema.EventTable.Cols.ELEVATION);
@@ -76,13 +76,13 @@ public class EventCursorWrapper extends CursorWrapper
         return ele;
     }
 
-    public Location getMarkers() {
+    public LocationA getMarkers() {
         String uuidString = getString(getColumnIndex(EventDbSchema.MarkerTable.Cols.UUID));
         String uuidString2 = getString(getColumnIndex(EventDbSchema.MarkerTable.Cols.UUID));
         // Array of doubles
         // Array of doubles
 
-        Location loc = new Location();
+        LocationA loc = new LocationA();
 
         return loc;
     }
