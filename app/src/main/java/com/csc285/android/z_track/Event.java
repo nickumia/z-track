@@ -2,7 +2,7 @@ package com.csc285.android.z_track;
 
 import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.Elevation;
-import com.csc285.android.z_track.Statistics.Location;
+import com.csc285.android.z_track.Statistics.LocationA;
 import com.csc285.android.z_track.Statistics.Pace;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
@@ -66,7 +66,7 @@ public class Event {
         stat6.setId(R.string.activity_item_avgspeed);
         stat6.setIdx(2);
 
-        Statistics stat7 = new Location();
+        Statistics stat7 = new LocationA();
         stat7.setId(R.string.activity_item_location);
         stat7.setIdx(5);
 
