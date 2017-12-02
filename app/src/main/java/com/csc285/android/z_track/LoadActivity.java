@@ -13,9 +13,6 @@ import java.util.List;
 
 public class LoadActivity extends AppCompatActivity {
 
-    private SensorManager mSensorManager;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +29,7 @@ public class LoadActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
 
-            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
 
             for (Sensor sensor : deviceSensors) {
@@ -102,6 +99,5 @@ public class LoadActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-//        mSensorManager.unregisterListener(this);
     }
 }

@@ -2,6 +2,7 @@ package com.csc285.android.z_track;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -17,6 +18,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.csc285.android.z_track.RecordSensor.RecordSensor;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -37,6 +40,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -60,24 +64,30 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
 
     private RecyclerView mStatsRecyclerView;
     private StatsAdapter mAdapter;
+
     private SensorManager mSensorManager;
     private Event mEvent;
+    Handler timer;
+    Time now;
+    RecordSensor accelR, compassR;
+    Sensor accel, compass;
+
     GoogleApiClient mClient;
     private GoogleMap mMap;
     private LocationCallback mLocationCallback;
-
+    Location currentLocation;
 
     boolean active = false;
     boolean save = false;
+
+    private SharedPreferences mPrefs;
+
+
     private static final String[] LOCATION_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
     };
     private static final int REQUEST_LOCATION_PERMISSIONS = 0;
-
-    Handler timer;
-    Time now;
-    Location currentLocation;
 
     public static ActivityFragment newInstance(UUID eventId)
     {
@@ -92,16 +102,30 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        UUID crimeId = (UUID) getActivity().getIntent().getSerializableExtra(EventActivity.EXTRA_EVENT_ID);
-        if (getArguments() != null) {
-            UUID crimeId = UUID.fromString(getArguments().getString(ARG_EVENT_ID));
-            mEvent = EventLab.get(getActivity()).getEvent(crimeId);
+        mEvent = EventLab.get(getActivity()).getTempEvent();
+
+        if (mEvent == null) {
+            if (getArguments() != null) {
+                UUID crimeId = UUID.fromString(getArguments().getString(ARG_EVENT_ID));
+                mEvent = EventLab.get(getActivity()).getEvent(crimeId);
+            } else {
+                mEvent = new Event();
+                EventLab.get(getActivity()).setTempEvent(mEvent);
+                System.out.println("I am a new event! :/");
+            }
         } else {
-            mEvent = new Event();
+            System.out.println("I am the same event! Yay!");
         }
+
+        mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
+        active = mPrefs.getBoolean("active", false);
+        save = mPrefs.getBoolean("save", false);
 
         setHasOptionsMenu(true);
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
+        accelR = new RecordSensor();
+
+        registerSensors();
         timer = new Handler();
 
         mClient = new GoogleApiClient.Builder(getActivity())
@@ -144,8 +168,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 // Add Marker Function
                 getLocation();
                 if (currentLocation != null) {
-                    LatLng here = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(here).title("You are Here!"));
+//                    LatLng here = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+//                    mMap.addMarker(new MarkerOptions().position(here).title("You are Here!"));
 //                    mMap.moveCamera(CameraUpdateFactory.newLatLng(here));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 14.0f));
                 } else {
@@ -172,9 +196,11 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         mStopActivity = (FloatingActionButton) v.findViewById(R.id.stop_activity);
         NestedScrollView mNSV = (NestedScrollView) v.findViewById(R.id.nsv);
 
-        mPauseActivity.setVisibility(View.GONE);
-        mResumeActivity.setVisibility(View.GONE);
-        mStopActivity.setVisibility(View.GONE);
+        if (!active && !save) {
+            mPauseActivity.setVisibility(View.GONE);
+            mResumeActivity.setVisibility(View.GONE);
+            mStopActivity.setVisibility(View.GONE);
+        }
 
         mStartActivity.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -233,6 +259,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         mNSV.fullScroll(NestedScrollView.FOCUS_UP);
         mNSV.scrollTo(0,mNSV.getTop());
         mNSV.smoothScrollTo(0,0);
+
+        updateUITime();
 
         return v;
     }
@@ -311,8 +339,12 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         void setmStats(List<Statistics> stats) { mStats = stats; }
     }
 
+    private void updateEvent() {
+        EventLab.get(getActivity()).updateEvent(mEvent);
+//        mCallbacks.onEventUpdated(mEvent);
+    }
+
     private void updateUI() {
-//        eventLab = EventLab.get(getActivity());
         List<Statistics> stats = mEvent.getmStats();
 
         if (mAdapter == null) {
@@ -326,6 +358,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         if (mClient.isConnected()){
             getLocation();
         }
+
+        updateEvent();
     }
 
     void updateUITime(){
@@ -337,6 +371,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
 
             now.setStartTime();
             timer.postDelayed(runnable, 0);
+            accelR.setLastUpdate(now.getCurrentTime());
         }
 
         if ( !active & !save){
@@ -351,9 +386,44 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         if ( !active & save){
             now.setEndTime();
             timer.removeCallbacks(runnable);
+            // EventLab.get(getActivity()).setTempEvent(null);
         }
     }
 
+    void registerSensors() {
+        mSensorManager.registerListener(this,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_NORMAL);
+
+        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+
+        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
+        if (compass != null) {
+            mSensorManager.registerListener(compassEventListener, compass,
+                    SensorManager.SENSOR_DELAY_NORMAL);
+        } else {
+            Log.e("Compass MainActivity", "Registerered for ORIENTATION Sensor");
+            Toast.makeText(getContext(), "ORIENTATION Sensor not found",
+                    Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    private SensorEventListener compassEventListener = new SensorEventListener() {
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            // angle between the magnetic north direction
+            // 0=North, 90=East, 180=South, 270=West
+            float azimuth = event.values[0];
+//            Log.d(TAG, Float.toString(azimuth));
+//            compassView.updateData(azimuth);
+        }
+    };
 
     /**
      * Used the following as a reference
@@ -396,6 +466,11 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        try {
+            mMap.setMyLocationEnabled(true);
+        } catch (SecurityException xe) {
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+        }
     }
 
 
@@ -410,7 +485,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
 //            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
 //                    new LocationListener() {
 //                        @Override
-//                        public void onLocationChanged(Location location) {
+//                        public void onLocationChanged(LocationA location) {
 //                            currentLocation = location;
 //                        }
 //                    });
@@ -419,8 +494,30 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         }
     }
 
+    public void showMarker(Double lat, Double lon) {
+        mMap.clear();
+        // Create a LatLng object with the given Latitude and Longitude
+        LatLng markerLoc = new LatLng(lat, lon);
+
+        //Add marker to map
+        mMap.addMarker(new MarkerOptions()
+                .position(markerLoc)                                                                        // at the location you needed
+                .title("Desired Title")                                                                     // with a title you needed
+                .snippet("Any summary if needed")                                                           // and also give some summary of available
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_act_add))); // and give your animation drawable as icon
+    }
+
     public void getGPSLocation(){
 
+    }
+
+    private void handleNewLocation(Location location) {
+        Log.d(TAG, location.toString());
+        double currentLatitude = location.getLatitude();
+        double currentLongitude = location.getLongitude();
+        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 21));
     }
 //
 //    protected void createLocationRequest() {
@@ -451,7 +548,33 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         // Many sensors return 3 values, one for each axis.
         float lux = event.values[0];
         // Do something with this sensor value.
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            getAccelerometer(event);
+        }
     }
+
+    private void getAccelerometer(SensorEvent event) {
+        float[] values = event.values;
+        // Movement
+        float x = values[0];
+        float y = values[1];
+        float z = values[2];
+
+        float accelerationSquareRoot = (x * x + y * y + z * z)
+                / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+        long actualTime = event.timestamp;
+        if (accelerationSquareRoot >= 2) //
+        {
+            if (actualTime - accelR.getLastUpdate() < 200) {
+                return;
+            }
+            accelR.setLastUpdate(actualTime);
+            Log.d(TAG, Float.toString(accelerationSquareRoot));
+            Log.d(TAG, Long.toString(actualTime));
+        }
+    }
+
 
     @Override
     public void onStart() {
@@ -463,6 +586,10 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onResume() {
         super.onResume();
+//        mSensorManager.registerListener(this, Sensor.TYPE_ACCELEROMETER,
+//                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+//        sm.registerListener(this, Sensor.TYPE_MAGNETIC_FIELD,
+//                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
 //        if (mRequestingLocationUpdates) {
 //            startLocationUpdates();
 //        }
@@ -473,7 +600,13 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onPause() {
         super.onPause();
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putBoolean("active", active);
+        ed.putBoolean("save", save);
+        ed.commit();
+
 //        stopLocationUpdates();
+        EventLab.get(getActivity()).updateEvent(mEvent);
         mSensorManager.unregisterListener(this);
     }
 
@@ -482,6 +615,37 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         super.onStop();
         mClient.disconnect();
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (compass != null) {
+            mSensorManager.unregisterListener(compassEventListener);
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+    }
+
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        outState.putParcelable("event", mEvent);
+//    }
+//
+//    @Override
+//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//        // TODO Auto-generated method stub
+//        super.onRestoreInstanceState(savedInstanceState);
+//        myClass=savedInstanceState.getParcelable("event"));
+//    }
 
 }
 
