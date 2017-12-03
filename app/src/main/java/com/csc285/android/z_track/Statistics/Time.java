@@ -10,6 +10,8 @@ public class Time extends Statistics {
 
     private long startTime = 0L;
     private long endTime = 0L;
+    private long startTimeOLD = 0L;
+    private long endTimeOLD = 0L;
     private long deltaTime = 0L;
     private int timeMilli = 0;
     private int timeSeconds = 0;
@@ -32,6 +34,7 @@ public class Time extends Statistics {
     }
 
     public void setStartTime() {
+        this.startTimeOLD = this.startTime;
         this.startTime = SystemClock.uptimeMillis();
     }
 
@@ -72,6 +75,7 @@ public class Time extends Statistics {
     }
 
     public void setEndTime() {
+        this.endTimeOLD = this.endTime;
         this.endTime = SystemClock.uptimeMillis();
     }
 
@@ -79,7 +83,18 @@ public class Time extends Statistics {
         return deltaTime;
     }
 
-    public void setDeltaTime() {
-        this.deltaTime += getEndTime() - getStartTime();
+    private long getOldDeltaTime(){
+        return this.endTimeOLD - this.startTimeOLD;
+    }
+
+    public void addDeltaTime() {
+        if (getOldDeltaTime() - (getEndTime() - getStartTime()) != 0 ||
+                (getOldDeltaTime() - (getCurrentTime() - getStartTime()) < 1)) {
+            this.deltaTime += getEndTime() - getStartTime();
+        }
+    }
+
+    public void resetDeltaTime() {
+        this.deltaTime = 0L;
     }
 }

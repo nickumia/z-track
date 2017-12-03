@@ -77,8 +77,10 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     private LocationCallback mLocationCallback;
     Location currentLocation;
 
+    boolean started = false;
     boolean active = false;
     boolean save = false;
+//    int orient;
 
     private SharedPreferences mPrefs;
 
@@ -120,6 +122,11 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
         active = mPrefs.getBoolean("active", false);
         save = mPrefs.getBoolean("save", false);
+        started = mPrefs.getBoolean("started", false);
+
+//        if (orient != getActivity().getResources().getConfiguration().orientation) {
+//            started = true;
+//        }
 
         setHasOptionsMenu(true);
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
@@ -168,10 +175,9 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 // Add Marker Function
                 getLocation();
                 if (currentLocation != null) {
-//                    LatLng here = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-//                    mMap.addMarker(new MarkerOptions().position(here).title("You are Here!"));
-//                    mMap.moveCamera(CameraUpdateFactory.newLatLng(here));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 14.0f));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
+                            LatLng(currentLocation.getLatitude(),
+                            currentLocation.getLongitude()), 14.0f));
                 } else {
                     Toast error = Toast.makeText(getContext(), getString(R.string.error_location), Toast.LENGTH_SHORT);
                     error.show();
@@ -196,19 +202,17 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         mStopActivity = (FloatingActionButton) v.findViewById(R.id.stop_activity);
         NestedScrollView mNSV = (NestedScrollView) v.findViewById(R.id.nsv);
 
-        if (!active && !save) {
-            mPauseActivity.setVisibility(View.GONE);
-            mResumeActivity.setVisibility(View.GONE);
-            mStopActivity.setVisibility(View.GONE);
-        }
+        updateUX();
 
         mStartActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Start Recording
+                started = true;
                 active = true;
                 save = false;
-                updateUITime();
+                updateTime();
+                updateUX();
             }
         });
 
@@ -218,7 +222,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 // Pause Recording
                 active = false;
                 save = false;
-                updateUITime();
+                updateTime();
+                updateUX();
             }
         });
 
@@ -228,7 +233,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 // Resume Recording
                 active = true;
                 save = false;
-                updateUITime();
+                updateTime();
+                updateUX();
             }
         });
 
@@ -238,7 +244,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 // Stop Recording
                 active = false;
                 save = true;
-                updateUITime();
+                updateTime();
+                updateUX();
             }
         });
 
@@ -248,7 +255,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         updateUI();
 
         now = (Time)mEvent.getStat(R.string.activity_item_time);
-
 
         // Old Issue solved from : https://stackoverflow.com/a/33525515
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
@@ -260,7 +266,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         mNSV.scrollTo(0,mNSV.getTop());
         mNSV.smoothScrollTo(0,0);
 
-        updateUITime();
+        updateUX();
+        updateTime();
 
         return v;
     }
@@ -362,30 +369,53 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         updateEvent();
     }
 
-    void updateUITime(){
-        if( active & !save){
-            mStartActivity.setVisibility(View.GONE);
+    void updateUX(){
+        if(!started){
+            mStartActivity.setVisibility(View.VISIBLE);
             mResumeActivity.setVisibility(View.GONE);
-            mPauseActivity.setVisibility(View.VISIBLE);
-            mStopActivity.setVisibility(View.VISIBLE);
+            mPauseActivity.setVisibility(View.GONE);
+            mStopActivity.setVisibility(View.GONE);
 
+        } else {
+            if (active & !save) {
+                mStartActivity.setVisibility(View.GONE);
+                mResumeActivity.setVisibility(View.GONE);
+                mPauseActivity.setVisibility(View.VISIBLE);
+                mStopActivity.setVisibility(View.VISIBLE);
+            }
+
+            if (!active & !save) {
+                mStartActivity.setVisibility(View.GONE);
+                mPauseActivity.setVisibility(View.GONE);
+                mResumeActivity.setVisibility(View.VISIBLE);
+                mStopActivity.setVisibility(View.VISIBLE);
+            }
+        }
+
+//        if ( !active & save && started){ }
+    }
+
+    void updateTime(){
+        if( active & !save && started){
             now.setStartTime();
             timer.postDelayed(runnable, 0);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
-        if ( !active & !save){
-            mPauseActivity.setVisibility(View.GONE);
-            mResumeActivity.setVisibility(View.VISIBLE);
-
+        if ( !active & !save && started){
             now.setEndTime();
-            now.setDeltaTime();
+            now.addDeltaTime();
             timer.removeCallbacks(runnable);
         }
 
-        if ( !active & save){
+        if ( !active & save && started){
+            started = false;
             now.setEndTime();
             timer.removeCallbacks(runnable);
+            now.resetDeltaTime();
+            now.setTimeSeconds(0);
+            now.setTimeMinutes(0);
+            now.setTimeMilli(0);
             // EventLab.get(getActivity()).setTempEvent(null);
         }
     }
@@ -546,7 +576,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     public final void onSensorChanged(SensorEvent event) {
         // The light sensor returns a single value.
         // Many sensors return 3 values, one for each axis.
-        float lux = event.values[0];
         // Do something with this sensor value.
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -600,9 +629,16 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onPause() {
         super.onPause();
+//        orient = getActivity().getResources().getConfiguration().orientation;
+        if (now != null) {
+//            now.setEndTime();
+            now.addDeltaTime();
+        }
+
         SharedPreferences.Editor ed = mPrefs.edit();
         ed.putBoolean("active", active);
         ed.putBoolean("save", save);
+        ed.putBoolean("started", started);
         ed.commit();
 
 //        stopLocationUpdates();
@@ -619,6 +655,12 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onDestroy() {
         super.onDestroy();
+        EventLab.get(getActivity()).setTempEvent(mEvent);
+
+//        SharedPreferences.Editor ed = mPrefs.edit();
+//        ed.putBoolean("started", started);
+//        ed.commit();
+
         if (compass != null) {
             mSensorManager.unregisterListener(compassEventListener);
         }
@@ -633,19 +675,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     public void onDetach() {
         super.onDetach();
     }
-
-//    @Override
-//    public void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        outState.putParcelable("event", mEvent);
-//    }
-//
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        // TODO Auto-generated method stub
-//        super.onRestoreInstanceState(savedInstanceState);
-//        myClass=savedInstanceState.getParcelable("event"));
-//    }
 
 }
 
