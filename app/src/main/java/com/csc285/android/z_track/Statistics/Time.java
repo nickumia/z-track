@@ -18,6 +18,14 @@ public class Time extends Statistics {
     private int timeMinutes = 0;
     private int timeHours = 0;
 
+    public String getQTime(){
+        return Long.toString(deltaTime);
+    }
+
+    public void setQTime(String q){
+        deltaTime = Long.valueOf(q);
+    }
+
     public void updateTime(){
         setTimeSeconds((int) ((getCurrentTime()-getStartTime()+getDeltaTime()) / 1000));
         setTimeMinutes(getTimeSeconds() / 60);

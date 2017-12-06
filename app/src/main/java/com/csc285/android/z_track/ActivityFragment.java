@@ -4,8 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -79,6 +77,10 @@ public class ActivityFragment extends Fragment implements
     private static final int REQUEST_PHOTO_PERMISSIONS = 1;
     private static final int REQUEST_PHOTO = 2;
     private static final int REQUEST_TIME = 3;
+    private static final String SAVED_ACTIVE = "active";
+    private static final String SAVED_STARTED = "started";
+    private static final String SAVED_SAVE = "save";
+    private static final String SAVED_TIME = "time";
     FloatingActionButton mStartActivity;
     FloatingActionButton mPauseActivity;
     FloatingActionButton mResumeActivity;
@@ -104,10 +106,9 @@ public class ActivityFragment extends Fragment implements
     boolean started = false;
     boolean active = false;
     boolean save = false;
-    boolean mRequestingLocationUpdates = false;
     int marker_photo_idx = 0;
 
-    private SharedPreferences mPrefs;
+//    private SharedPreferences mPrefs;
 
     private static final String[] LOCATION_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -130,7 +131,13 @@ public class ActivityFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        if (savedInstanceState != null) {
+            active = savedInstanceState.getBoolean(SAVED_ACTIVE);
+            started = savedInstanceState.getBoolean(SAVED_STARTED);
+            save = savedInstanceState.getBoolean(SAVED_SAVE);
+        }
 
         mEvent = EventLab.get(getActivity()).getTempEvent();
 
@@ -149,10 +156,10 @@ public class ActivityFragment extends Fragment implements
 
         // Reference for SharedPreferences :
         // https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
-        mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
-        active = mPrefs.getBoolean("active", false);
-        save = mPrefs.getBoolean("save", false);
-        started = mPrefs.getBoolean("started", false);
+//        mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
+//        active = mPrefs.getBoolean("active", false);
+//        save = mPrefs.getBoolean("save", false);
+//        started = mPrefs.getBoolean("started", false);
 
         setHasOptionsMenu(true);
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
@@ -174,6 +181,20 @@ public class ActivityFragment extends Fragment implements
                     }
                 })
                 .build();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        if (now != null) {
+            now.setEndTime();
+        }
+
+        outState.putBoolean(SAVED_STARTED, started);
+        outState.putBoolean(SAVED_SAVE, save);
+        outState.putBoolean(SAVED_ACTIVE, active);
+        outState.putString(SAVED_TIME, now.getQTime());
     }
 
     @Override
@@ -267,6 +288,10 @@ public class ActivityFragment extends Fragment implements
         now = (Time)mEvent.getStat(R.string.activity_item_time);
         mTracking = (LocationA)mEvent.getStat(R.string.activity_item_location);
 
+        if (savedInstanceState != null) {
+            now.setQTime(savedInstanceState.getString(SAVED_TIME));
+        }
+
         // Old Issue solved from : https://stackoverflow.com/a/33525515
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
                 .findFragmentById(R.id.map);
@@ -317,10 +342,12 @@ public class ActivityFragment extends Fragment implements
             mUnitsTextView.setText(units[mStats.getIdx()]);
 
             if (stat instanceof Time){
-                mDataTextView.setText("" + now.getTimeMinutes() + ":"
-                        + String.format(Locale.getDefault(), "%02d", now.getTimeSeconds())
-                        + ":" + String.format(Locale.getDefault(), "%03d", now.getTimeMilli()));
-            } else if (stat instanceof LocationA){
+                mDataTextView.setText(getString(R.string.time, now.getTimeMinutes(),
+                        String.format(Locale.getDefault(), "%02d", now.getTimeSeconds()),
+                        String.format(Locale.getDefault(), "%03d", now.getTimeMilli())));
+            }
+
+            if (stat instanceof LocationA){
                 mDataTextView.setText("" + mTracking.getCurrent().getLatitude() + "°, " +
                         mTracking.getCurrent().getLongitude() + "°");
             }
@@ -409,15 +436,15 @@ public class ActivityFragment extends Fragment implements
 
     void updateTime(){
         if( active & !save && started){
+            now.addDeltaTime();
             now.setStartTime();
-            getLocation();
+            if(mClient.isConnected()) getLocation();
             timer.postDelayed(runnable, 0);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
         if ( !active & !save && started){
             now.setEndTime();
-            now.addDeltaTime();
             timer.removeCallbacks(runnable);
         }
 
@@ -490,7 +517,7 @@ public class ActivityFragment extends Fragment implements
             mMap.clear();
             ArrayList<Location> m = mTracking.getMarkers();
             ArrayList<String> ms = mTracking.getMarkerTitles();
-            //ArrayList<String> mi = mEvent.getMarkers();
+//            ArrayList<String> mi = mEvent.getMarkers();
 
             for (int i = 0; i < m.size(); i++) {
                 File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
@@ -500,7 +527,6 @@ public class ActivityFragment extends Fragment implements
             FragmentManager manager = getFragmentManager();
             ShowLargePictureFragment dialog = ShowLargePictureFragment
                     .newInstance(mEvent.getPhotoFilename(marker_photo_idx-1));
-//                        .newInstance(new File(filesDir, mCrime.getPhotoFilename()));
 
             dialog.setTargetFragment(ActivityFragment.this, REQUEST_TIME);
             dialog.show(manager, DIALOG_MARKER);
@@ -761,21 +787,17 @@ public class ActivityFragment extends Fragment implements
     public void onPause() {
         super.onPause();
 //        stopLocationUpdates();
-        if (now != null) {
-            now.setEndTime();
-            now.addDeltaTime();
-        }
 
-        SharedPreferences.Editor ed = mPrefs.edit();
-//        ed.putBoolean("active", active);
-//        ed.putBoolean("save", save);
-//        ed.putBoolean("started", started);
-//        ed.putBoolean("location", mRequestingLocationUpdates);
-        ed.putBoolean("active", false);
-        ed.putBoolean("save", false);
-        ed.putBoolean("started", false);
-        ed.putBoolean("location", false);
-        ed.commit();
+//        SharedPreferences.Editor ed = mPrefs.edit();
+////        ed.putBoolean("active", active);
+////        ed.putBoolean("save", save);
+////        ed.putBoolean("started", started);
+////        ed.putBoolean("location", mRequestingLocationUpdates);
+//        ed.putBoolean("active", false);
+//        ed.putBoolean("save", false);
+//        ed.putBoolean("started", false);
+//        ed.putBoolean("location", false);
+//        ed.commit();
 
 //        stopLocationUpdates();
         updateEvent();
