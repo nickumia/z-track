@@ -1,20 +1,29 @@
 package com.csc285.android.z_track;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -25,16 +34,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.csc285.android.z_track.RecordSensor.RecordSensor;
+import com.csc285.android.z_track.Statistics.LocationA;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -42,21 +52,33 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by nick on 11/16/2017.
  *
  */
 
-public class ActivityFragment extends Fragment implements SensorEventListener, OnMapReadyCallback {
+public class ActivityFragment extends Fragment implements
+        SensorEventListener,
+        OnMapReadyCallback,
+        GoogleMap.OnMarkerClickListener {
 
     private static final String TAG = "ActivityFragment";
     private static final String ARG_EVENT_ID = "event_id";
+    private static final String DIALOG_MARKER = "DialogMarker";
+    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
+    private static final int REQUEST_PHOTO_PERMISSIONS = 1;
+    private static final int REQUEST_PHOTO = 2;
+    private static final int REQUEST_TIME = 3;
     FloatingActionButton mStartActivity;
     FloatingActionButton mPauseActivity;
     FloatingActionButton mResumeActivity;
@@ -69,27 +91,32 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     private Event mEvent;
     Handler timer;
     Time now;
+    LocationA mTracking;
     RecordSensor accelR, compassR;
     Sensor accel, compass;
+    File mPhotoFile;
 
     GoogleApiClient mClient;
     private GoogleMap mMap;
-    private LocationCallback mLocationCallback;
     Location currentLocation;
+
 
     boolean started = false;
     boolean active = false;
     boolean save = false;
-//    int orient;
+    boolean mRequestingLocationUpdates = false;
+    int marker_photo_idx = 0;
 
     private SharedPreferences mPrefs;
-
 
     private static final String[] LOCATION_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
     };
-    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
+    private static final String[] CAMERA_PERMISSION = new String[]{
+            Manifest.permission.CAMERA
+    };
+
 
     public static ActivityFragment newInstance(UUID eventId)
     {
@@ -103,36 +130,35 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         mEvent = EventLab.get(getActivity()).getTempEvent();
 
         if (mEvent == null) {
             if (getArguments() != null) {
-                UUID crimeId = UUID.fromString(getArguments().getString(ARG_EVENT_ID));
-                mEvent = EventLab.get(getActivity()).getEvent(crimeId);
+                UUID eventId = UUID.fromString(getArguments().getString(ARG_EVENT_ID));
+                mEvent = EventLab.get(getActivity()).getEvent(eventId);
             } else {
                 mEvent = new Event();
                 EventLab.get(getActivity()).setTempEvent(mEvent);
-                System.out.println("I am a new event! :/");
             }
-        } else {
-            System.out.println("I am the same event! Yay!");
         }
 
+//        mEvent.addPhotoFilename(marker_photo_idx);
+//        mPhotoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, marker_photo_idx);
+
+        // Reference for SharedPreferences :
+        // https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
         mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
         active = mPrefs.getBoolean("active", false);
         save = mPrefs.getBoolean("save", false);
         started = mPrefs.getBoolean("started", false);
 
-//        if (orient != getActivity().getResources().getConfiguration().orientation) {
-//            started = true;
-//        }
-
         setHasOptionsMenu(true);
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         accelR = new RecordSensor();
 
-        registerSensors();
+//        registerSensors();
         timer = new Handler();
 
         mClient = new GoogleApiClient.Builder(getActivity())
@@ -148,22 +174,15 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                     }
                 })
                 .build();
-
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()) {
-                    // Update UI with location data
-                    // ...
-                }
-            };
-        };
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.activity_fragment, menu);
+
+//        MenuItem searchItem = menu.findItem(R.id.act_add_marker);
+//        searchItem.setEnabled(active);
     }
 
     @Override
@@ -172,23 +191,12 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
 
         if (id == R.id.act_add_marker) {
             if (hasLocationPermission()) {
-                // Add Marker Function
-                getLocation();
-                if (currentLocation != null) {
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
-                            LatLng(currentLocation.getLatitude(),
-                            currentLocation.getLongitude()), 14.0f));
-                } else {
-                    Toast error = Toast.makeText(getContext(), getString(R.string.error_location), Toast.LENGTH_SHORT);
-                    error.show();
-                }
-
+                addMarker();
             } else {
                 requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
             }
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -208,6 +216,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
             @Override
             public void onClick(View view) {
                 // Start Recording
+                if (mClient.isConnected()) getLocation();
+                mTracking.setStart(currentLocation);
                 started = true;
                 active = true;
                 save = false;
@@ -255,6 +265,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         updateUI();
 
         now = (Time)mEvent.getStat(R.string.activity_item_time);
+        mTracking = (LocationA)mEvent.getStat(R.string.activity_item_location);
 
         // Old Issue solved from : https://stackoverflow.com/a/33525515
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
@@ -309,6 +320,9 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 mDataTextView.setText("" + now.getTimeMinutes() + ":"
                         + String.format(Locale.getDefault(), "%02d", now.getTimeSeconds())
                         + ":" + String.format(Locale.getDefault(), "%03d", now.getTimeMilli()));
+            } else if (stat instanceof LocationA){
+                mDataTextView.setText("" + mTracking.getCurrent().getLatitude() + "°, " +
+                        mTracking.getCurrent().getLongitude() + "°");
             }
 
         }
@@ -348,7 +362,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
 
     private void updateEvent() {
         EventLab.get(getActivity()).updateEvent(mEvent);
-//        mCallbacks.onEventUpdated(mEvent);
     }
 
     private void updateUI() {
@@ -392,12 +405,12 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
             }
         }
 
-//        if ( !active & save && started){ }
     }
 
     void updateTime(){
         if( active & !save && started){
             now.setStartTime();
+            getLocation();
             timer.postDelayed(runnable, 0);
             accelR.setLastUpdate(now.getCurrentTime());
         }
@@ -419,6 +432,236 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
             // EventLab.get(getActivity()).setTempEvent(null);
         }
     }
+
+    private void updatePhotoView(ImageView photoView, int idx) {
+        File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, idx);
+        if (photoView != null) {
+            if (photoFile == null || !photoFile.exists()) {
+                photoView.setImageDrawable(null);
+            } else {
+                Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity());
+                photoView.setImageBitmap(bitmap);
+            }
+        }
+    }
+
+    /**
+     * Used the following as a reference
+     * Creating a Stopwatch
+     * https://www.android-examples.com/android-create-stopwatch-example-tutorial-in-android-studio/
+     *
+     * Handler Reference Page
+     * https://developer.android.com/reference/android/os/Handler.html
+     */
+    public Runnable runnable = new Runnable() {
+
+        public void run() {
+            Time now = (Time)mEvent.getStat(R.string.activity_item_time);
+            now.updateTime();
+            timer.postDelayed(this, 0);
+            updateUI();
+        }
+
+    };
+
+    private boolean hasLocationPermission() {
+        int result = ContextCompat.checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean hasCameraPermission() {
+        int result = ContextCompat.checkSelfPermission(getActivity(), CAMERA_PERMISSION[0]);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        if (requestCode == REQUEST_PHOTO) {
+            Uri uri = FileProvider.getUriForFile(getActivity(),
+                    "com.csc285.android.z_track.fileprovider", mPhotoFile);
+            getActivity().revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            updateEvent();
+
+            mMap.clear();
+            ArrayList<Location> m = mTracking.getMarkers();
+            ArrayList<String> ms = mTracking.getMarkerTitles();
+            //ArrayList<String> mi = mEvent.getMarkers();
+
+            for (int i = 0; i < m.size(); i++) {
+                File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
+                showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
+            }
+
+            FragmentManager manager = getFragmentManager();
+            ShowLargePictureFragment dialog = ShowLargePictureFragment
+                    .newInstance(mEvent.getPhotoFilename(marker_photo_idx-1));
+//                        .newInstance(new File(filesDir, mCrime.getPhotoFilename()));
+
+            dialog.setTargetFragment(ActivityFragment.this, REQUEST_TIME);
+            dialog.show(manager, DIALOG_MARKER);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_LOCATION_PERMISSIONS:
+                if (hasLocationPermission()) {
+                    // Add Marker Function
+                    addMarker();
+                }
+            case REQUEST_PHOTO_PERMISSIONS:
+                if (hasCameraPermission()) {
+                    // Take picture
+                    takePicture();
+                }
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        try {
+            mMap.setMyLocationEnabled(true);
+            if(mClient.isConnected()) getLocation();
+            if (currentLocation != null) {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
+                        LatLng(currentLocation.getLatitude(),
+                        currentLocation.getLongitude()), 14.0f));
+            }
+        } catch (SecurityException xe) {
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+        }
+
+        mMap.setOnMarkerClickListener(this);
+
+    }
+
+    @Override
+    public boolean onMarkerClick(final Marker marker) {
+
+        // Retrieve the data from the marker.
+        Integer clickCount = (Integer) marker.getTag();
+
+        // Check if a click count was set, then display the click count.
+        if (clickCount != null) {
+            clickCount = clickCount + 1;
+            marker.setTag(clickCount);
+        }
+
+        // Return false to indicate that we have not consumed the event and that we wish
+        // for the default behavior to occur (which is for the camera to move such that the
+        // marker is centered and for the marker's info window to open, if it has one).
+        return false;
+    }
+
+
+    public void addMarker(){
+        mEvent.addPhotoFilename(marker_photo_idx);
+        mPhotoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, marker_photo_idx);
+        //System.out.println(currentLocation);
+
+        if (currentLocation != null && mPhotoFile != null) {
+            // Open Dialog to take picture;
+            long millis = now.getCurrentTime();
+            mTracking.addMarkers(currentLocation, String.format(Locale.getDefault(), "%02d:%02d:%02d",
+                    TimeUnit.MILLISECONDS.toHours(millis),
+                    TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
+                    TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)))
+            );
+//            mEvent.addPhotoFilename(marker_photo_idx);
+            marker_photo_idx++;
+
+            takePicture();
+        } else {
+            Toast error = Toast.makeText(getContext(), getString(R.string.error_location), Toast.LENGTH_SHORT);
+            error.show();
+        }
+    }
+
+    public void takePicture(){
+        PackageManager packageManager = getActivity().getPackageManager();
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        if (captureImage.resolveActivity(packageManager) != null) {
+            Uri uri = FileProvider.getUriForFile(getActivity(),
+                    "com.csc285.android.z_track.fileprovider", mPhotoFile);
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            List<ResolveInfo> cameraActivities = getActivity()
+                    .getPackageManager().queryIntentActivities(captureImage,
+                            PackageManager.MATCH_DEFAULT_ONLY);
+            for (ResolveInfo activity : cameraActivities) {
+                getActivity().grantUriPermission(activity.activityInfo.packageName, uri,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            }
+            if (hasCameraPermission()) {
+                startActivityForResult(captureImage, REQUEST_PHOTO);
+            } else {
+                requestPermissions(CAMERA_PERMISSION, REQUEST_PHOTO_PERMISSIONS);
+            }
+        }
+    }
+
+    public void getLocation(){
+        LocationRequest request = LocationRequest.create();
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setNumUpdates(1);
+        request.setInterval(0);
+
+        // Android Studio would not let me compile without adding this try-catch block
+        try {
+//            currentLocation = locationManager.getLastKnownLocation(locationProvider);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
+                    new LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            Log.i(TAG, "Got a fix: " + location);
+                            currentLocation = location;
+                        }
+                    });
+        }catch (SecurityException xe){
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+        }
+    }
+
+
+    // Google Maps API Marker Documentation
+    // https://developers.google.com/maps/documentation/android-api/marker
+    public void showMarker(Double lat, Double lon, String title, File imageFile) {
+        mMap.clear();
+        // Create a LatLng object with the given Latitude and Longitude
+        LatLng markerLoc = new LatLng(lat, lon);
+        Bitmap bitmap = PictureUtils.getScaledBitmap(imageFile.getPath(), 200,200);
+
+        //Add marker to map
+        mMap.addMarker(new MarkerOptions()
+                .position(markerLoc)                  // at the location you needed
+                .title(title)                         // with a title you needed
+                .snippet("")     // and also give some summary of available
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+        ); // and give your animation drawable as icon
+    }
+
+    public void getGPSLocation(){
+
+    }
+
+    private void handleNewLocation(Location location) {
+        Log.d(TAG, location.toString());
+        double currentLatitude = location.getLatitude();
+        double currentLongitude = location.getLongitude();
+        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 21));
+    }
+
 
     void registerSensors() {
         mSensorManager.registerListener(this,
@@ -455,118 +698,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
         }
     };
 
-    /**
-     * Used the following as a reference
-     * Creating a Stopwatch
-     * https://www.android-examples.com/android-create-stopwatch-example-tutorial-in-android-studio/
-     *
-     * Handler Reference Page
-     * https://developer.android.com/reference/android/os/Handler.html
-     */
-    public Runnable runnable = new Runnable() {
-
-        public void run() {
-            Time now = (Time)mEvent.getStat(R.string.activity_item_time);
-            now.updateTime();
-            timer.postDelayed(this, 0);
-            updateUI();
-        }
-
-    };
-
-    private boolean hasLocationPermission() {
-        int result = ContextCompat.checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]);
-        return result == PackageManager.PERMISSION_GRANTED;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_LOCATION_PERMISSIONS:
-                if (hasLocationPermission()) {
-                    // Add Marker Function
-
-                }
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        try {
-            mMap.setMyLocationEnabled(true);
-        } catch (SecurityException xe) {
-            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
-        }
-    }
-
-
-    public void getLocation(){
-        LocationRequest request = LocationRequest.create();
-        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        request.setNumUpdates(1);
-        request.setInterval(0);
-
-        try {
-            currentLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
-//            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
-//                    new LocationListener() {
-//                        @Override
-//                        public void onLocationChanged(LocationA location) {
-//                            currentLocation = location;
-//                        }
-//                    });
-        }catch (SecurityException xe){
-            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
-        }
-    }
-
-    public void showMarker(Double lat, Double lon) {
-        mMap.clear();
-        // Create a LatLng object with the given Latitude and Longitude
-        LatLng markerLoc = new LatLng(lat, lon);
-
-        //Add marker to map
-        mMap.addMarker(new MarkerOptions()
-                .position(markerLoc)                                                                        // at the location you needed
-                .title("Desired Title")                                                                     // with a title you needed
-                .snippet("Any summary if needed")                                                           // and also give some summary of available
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_act_add))); // and give your animation drawable as icon
-    }
-
-    public void getGPSLocation(){
-
-    }
-
-    private void handleNewLocation(Location location) {
-        Log.d(TAG, location.toString());
-        double currentLatitude = location.getLatitude();
-        double currentLongitude = location.getLongitude();
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 21));
-    }
-//
-//    protected void createLocationRequest() {
-//        LocationRequest mLocationRequest = new LocationRequest();
-//        mLocationRequest.setInterval(10000);
-//        mLocationRequest.setFastestInterval(5000);
-//        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//    }
-//
-//    private void startLocationUpdates() {
-//        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-//                mLocationCallback,
-//                null /* Looper */);
-//    }
-//
-//    private void stopLocationUpdates() {
-//        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-//    }
-
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
         // Do something here if sensor accuracy changes.
@@ -599,8 +730,8 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
                 return;
             }
             accelR.setLastUpdate(actualTime);
-            Log.d(TAG, Float.toString(accelerationSquareRoot));
-            Log.d(TAG, Long.toString(actualTime));
+//            Log.d(TAG, Float.toString(accelerationSquareRoot));
+//            Log.d(TAG, Long.toString(actualTime));
         }
     }
 
@@ -608,7 +739,7 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onStart() {
         super.onStart();
-//        getActivity().invalidateOptionsMenu();
+        getActivity().invalidateOptionsMenu();
         mClient.connect();
     }
 
@@ -629,20 +760,25 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     @Override
     public void onPause() {
         super.onPause();
-//        orient = getActivity().getResources().getConfiguration().orientation;
+//        stopLocationUpdates();
         if (now != null) {
-//            now.setEndTime();
+            now.setEndTime();
             now.addDeltaTime();
         }
 
         SharedPreferences.Editor ed = mPrefs.edit();
-        ed.putBoolean("active", active);
-        ed.putBoolean("save", save);
-        ed.putBoolean("started", started);
+//        ed.putBoolean("active", active);
+//        ed.putBoolean("save", save);
+//        ed.putBoolean("started", started);
+//        ed.putBoolean("location", mRequestingLocationUpdates);
+        ed.putBoolean("active", false);
+        ed.putBoolean("save", false);
+        ed.putBoolean("started", false);
+        ed.putBoolean("location", false);
         ed.commit();
 
 //        stopLocationUpdates();
-        EventLab.get(getActivity()).updateEvent(mEvent);
+        updateEvent();
         mSensorManager.unregisterListener(this);
     }
 
@@ -656,10 +792,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
     public void onDestroy() {
         super.onDestroy();
         EventLab.get(getActivity()).setTempEvent(mEvent);
-
-//        SharedPreferences.Editor ed = mPrefs.edit();
-//        ed.putBoolean("started", started);
-//        ed.commit();
 
         if (compass != null) {
             mSensorManager.unregisterListener(compassEventListener);
@@ -681,3 +813,6 @@ public class ActivityFragment extends Fragment implements SensorEventListener, O
 
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
+
+// Reference to draw path on map
+// https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/

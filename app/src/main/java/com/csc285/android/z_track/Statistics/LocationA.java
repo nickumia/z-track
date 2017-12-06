@@ -14,9 +14,16 @@ public class LocationA extends Statistics {
     private Location start = new Location("dum");
     private Location end = new Location("dum");
     private ArrayList<Location> markers = new ArrayList<>();
+    private ArrayList<String> marker_time = new ArrayList<>();
 
     public LocationA(){
-        markers.add(start);
+        current.setLatitude(0);
+        current.setLongitude(0);
+        start.setLatitude(0);
+        start.setLongitude(0);
+        end.setLatitude(0);
+        end.setLongitude(0);
+//        markers.add(start);
     }
 
     public Location getCurrent() {
@@ -32,7 +39,11 @@ public class LocationA extends Statistics {
     }
 
     public void setStart(Location start) {
-        this.start = start;
+        if (start != null) {
+            this.start = start;
+            markers.add(start);
+        }
+
     }
 
     public Location getEnd() {
@@ -47,7 +58,10 @@ public class LocationA extends Statistics {
         return markers;
     }
 
-    public void setMarkers(Location markers) {
+    public ArrayList<String> getMarkerTitles() {return marker_time; }
+
+    public void addMarkers(Location markers, String time) {
         this.markers.add(markers);
+        this.marker_time.add(time);
     }
 }

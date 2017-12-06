@@ -15,6 +15,7 @@ import com.csc285.android.z_track.database.EventBaseHelper;
 import com.csc285.android.z_track.database.EventCursorWrapper;
 import com.csc285.android.z_track.database.EventDbSchema;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +25,7 @@ import java.util.UUID;
  */
 
 public class EventLab {
+    
     private static EventLab sStatisticsLab;
     private Event tempEvent;
 
@@ -84,8 +86,8 @@ public class EventLab {
                 l.getEnd().getLatitude());
         values.put(EventDbSchema.EventTable.Cols.END_LOC_LON,
                 l.getEnd().getLongitude());
-        values.put(EventDbSchema.EventTable.Cols.MARKER_LOC,
-                l.getMarkers().get(0).getLongitude());
+//        values.put(EventDbSchema.EventTable.Cols.MARKER_LOC,
+//                l.getMarkers().get(0).getLongitude());
 
         Time t = (Time) event.getStat(R.string.activity_item_time);
         values.put(EventDbSchema.EventTable.Cols.START_TIME,
@@ -106,8 +108,7 @@ public class EventLab {
 
     public List<Event> getEvents() {
         List<Event> crimes = new ArrayList<>();
-        EventCursorWrapper cursor = queryCrimes(null,
-                null);
+        EventCursorWrapper cursor = queryCrimes(null, null);
         try {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
@@ -118,6 +119,12 @@ public class EventLab {
             cursor.close();
         }
         return crimes;
+    }
+
+    public File getPhotoFile(Event event, int idx) {
+        File filesDir = mContext.getFilesDir();
+        return new File(filesDir,
+                event.getPhotoFilename(idx));
     }
 
     public Event getEvent(UUID id) {
