@@ -33,6 +33,7 @@ public class Event {
     private Date mDate;
     private long mTime;
     private ArrayList<Statistics> mStats = new ArrayList<>();
+    private ArrayList<String> markers = new ArrayList<>();
 
     Event(){
         this(UUID.randomUUID());
@@ -114,6 +115,19 @@ public class Event {
             }
         }
         return null;
+    }
+
+    public void addPhotoFilename(int idx) {
+        String a = "IMG_" + getmId().toString() + idx + ".jpg";
+        markers.add(idx,a);
+    }
+
+    public String getPhotoFilename(int idx) {
+        return markers.get(idx);
+    }
+
+    public ArrayList<String> getMarkers(){
+        return markers;
     }
 
 
