@@ -48,11 +48,14 @@ public class HistoryFragment extends Fragment {
     private class EventHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView mNameTextView;
+        private Event mEvent;
 
         EventHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.list_stats_item, parent, false));
 
             itemView.setOnClickListener(this);
+            mNameTextView = (TextView) itemView.findViewById(R.id.event_title);
+
 
         }
 
@@ -64,7 +67,8 @@ public class HistoryFragment extends Fragment {
          *
          */
         void bind(Event event) {
-
+            mEvent = event;
+            mNameTextView.setText(event.getmDate().toString());
         }
 
         @Override
@@ -101,13 +105,14 @@ public class HistoryFragment extends Fragment {
     }
 
     private void updateUI() {
-        List<Event> stats = EventLab.get(getActivity()).getEvents();
+        EventLab eventLab = EventLab.get(getActivity());
+        List<Event> events = eventLab.getEvents();
 
         if (mAdapter == null) {
-            mAdapter = new EventAdapter(stats);
+            mAdapter = new EventAdapter(events);
             mEventRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.setmEvent(stats);
+            mAdapter.setmEvent(events);
             mAdapter.notifyDataSetChanged();
         }
     }
