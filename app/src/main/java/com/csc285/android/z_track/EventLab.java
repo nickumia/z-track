@@ -58,6 +58,8 @@ public class EventLab {
                 event.getmId().toString());
         values.put(EventDbSchema.EventTable.Cols.DATE,
                 event.getmDate().getTime());
+        values.put(EventDbSchema.EventTable.Cols.A_TYPE,
+                event.getAcType());
 
         Distance d = (Distance) event.getStat(R.string.activity_item_distance);
         values.put(EventDbSchema.EventTable.Cols.DISTANCE,

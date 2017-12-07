@@ -33,6 +33,7 @@ public class Event {
     private UUID mId;
     private Date mDate;
     private long mTime;
+    private String acType;
     private ArrayList<Statistics> mStats = new ArrayList<>();
     private ArrayList<String> markerPhotoFileNames = new ArrayList<>();
 
@@ -89,6 +90,14 @@ public class Event {
 
     public void setmId(UUID mName) {
         this.mId = mName;
+    }
+
+    public String getAcType() {
+        return acType;
+    }
+
+    public void setAcType(String acType) {
+        this.acType = acType;
     }
 
     public Date getmDate() {
