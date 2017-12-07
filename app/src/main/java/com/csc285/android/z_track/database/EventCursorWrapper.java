@@ -36,24 +36,24 @@ public class EventCursorWrapper extends CursorWrapper
         double end_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LAT));
         double end_location_lon = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LON));
         float marker_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.MARKER_LOC));
-        float start_time = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.START_TIME));
-        float end_time = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_TIME));
+        long start_time = getLong(getColumnIndex(EventDbSchema.EventTable.Cols.START_TIME));
+        long end_time = getLong(getColumnIndex(EventDbSchema.EventTable.Cols.END_TIME));
 
         Event event = new Event(UUID.fromString(uuidString));
         event.setmDate(new Date(date));
 //        event.setmTime(time);
-//        event.setmStats(distance, EventDbSchema.EventTable.Cols.DISTANCE);
-//        event.setmStats(pace, EventDbSchema.EventTable.Cols.PACE);
-////        event.setmStats(elevation, EventDbSchema.EventTable.Cols.ELEVATION);
-//        event.setmStats(top_velocity, EventDbSchema.EventTable.Cols.TOP_VELOCITY);
-////        event.setmStats(velocity, EventDbSchema.EventTable.Cols.VELOCITY);
-//        event.setmStats(start_location_lat, EventDbSchema.EventTable.Cols.START_LOC_LAT);
-//        event.setmStats(start_location_lon, EventDbSchema.EventTable.Cols.START_LOC_LON);
-//        event.setmStats(end_location_lat, EventDbSchema.EventTable.Cols.END_LOC_LAT);
-//        event.setmStats(end_location_lon, EventDbSchema.EventTable.Cols.END_LOC_LON);
-////        event.setmStats(marker_location_lat, EventDbSchema.EventTable.Cols.MARKER_LOC);
-//        event.setmStats(start_time, EventDbSchema.EventTable.Cols.START_TIME);
-//        event.setmStats(end_time, EventDbSchema.EventTable.Cols.END_TIME);
+        event.setmStats(distance, EventDbSchema.EventTable.Cols.DISTANCE);
+        event.setmStats(pace, EventDbSchema.EventTable.Cols.PACE);
+//        event.setmStats(elevation, EventDbSchema.EventTable.Cols.ELEVATION);
+        event.setmStats(top_velocity, EventDbSchema.EventTable.Cols.TOP_VELOCITY);
+//        event.setmStats(velocity, EventDbSchema.EventTable.Cols.VELOCITY);
+        event.setmStats(start_location_lat, EventDbSchema.EventTable.Cols.START_LOC_LAT);
+        event.setmStats(start_location_lon, EventDbSchema.EventTable.Cols.START_LOC_LON);
+        event.setmStats(end_location_lat, EventDbSchema.EventTable.Cols.END_LOC_LAT);
+        event.setmStats(end_location_lon, EventDbSchema.EventTable.Cols.END_LOC_LON);
+//        event.setmStats(marker_location_lat, EventDbSchema.EventTable.Cols.MARKER_LOC);
+        event.setmStats(start_time, EventDbSchema.EventTable.Cols.START_TIME);
+        event.setmStats(end_time, EventDbSchema.EventTable.Cols.END_TIME);
 
         return event;
     }
