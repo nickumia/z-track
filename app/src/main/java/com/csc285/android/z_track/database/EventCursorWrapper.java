@@ -24,6 +24,7 @@ public class EventCursorWrapper extends CursorWrapper
 
     public Event getEvent() {
         String uuidString = getString(getColumnIndex(EventDbSchema.EventTable.Cols.UUID));
+        String a_type = getString(getColumnIndex(EventDbSchema.EventTable.Cols.A_TYPE));
         long date = getLong(getColumnIndex(EventDbSchema.EventTable.Cols.DATE));
 //        long time = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME));
         float distance = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.DISTANCE));
@@ -41,6 +42,7 @@ public class EventCursorWrapper extends CursorWrapper
 
         Event event = new Event(UUID.fromString(uuidString));
         event.setmDate(new Date(date));
+        event.setAcType(a_type);
 //        event.setmTime(time);
         event.setmStats(distance, EventDbSchema.EventTable.Cols.DISTANCE);
         event.setmStats(pace, EventDbSchema.EventTable.Cols.PACE);

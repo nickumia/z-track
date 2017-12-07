@@ -12,6 +12,7 @@ public class EventDbSchema {
         public static final class Cols {
             public static final String UUID = "uuid";
             public static final String DATE = "date";
+            public static final String A_TYPE = "activity_type";
 //            public static final String TIME = "time";
             public static final String DISTANCE = "distance";
             public static final String PACE = "pace";
