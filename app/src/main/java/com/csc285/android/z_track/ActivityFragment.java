@@ -3,6 +3,7 @@ package com.csc285.android.z_track;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -24,6 +25,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -34,6 +36,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -109,6 +112,7 @@ public class ActivityFragment extends Fragment implements
     boolean active = false;
     boolean save = false;
     boolean resumed = false;
+    String state = "";
     int marker_photo_idx = 0;
 
     private SharedPreferences mPrefs;
@@ -207,9 +211,22 @@ public class ActivityFragment extends Fragment implements
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.activity_fragment, menu);
+    }
 
-//        MenuItem searchItem = menu.findItem(R.id.act_add_marker);
-//        searchItem.setEnabled(active);
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        MenuItem choose = menu.findItem(R.id.action_choose);
+        MenuItem marker = menu.findItem(R.id.act_add_marker);
+
+        if (started) {
+            choose.setVisible(false);
+            marker.setVisible(true);
+        } else {
+            choose.setVisible(true);
+            marker.setVisible(false);
+        }
     }
 
     @Override
@@ -222,6 +239,38 @@ public class ActivityFragment extends Fragment implements
             } else {
                 requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
             }
+            return true;
+        }
+
+        if (id == R.id.action_choose) {
+
+            View v = LayoutInflater.from(getActivity())
+                    .inflate(R.layout.dialog_choose_activity, null);
+
+            final RadioButton walk = (RadioButton) v.findViewById(R.id.walkRadioButton);
+            final RadioButton bike = (RadioButton) v.findViewById(R.id.bikeRadioButton);
+            final RadioButton misc = (RadioButton) v.findViewById(R.id.miscRadioButton);
+
+            new AlertDialog.Builder(getActivity())
+                    .setView(v)
+                    .setTitle(R.string.choose_activity)
+                    .setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (walk.isChecked()){
+                                        state = "walk";
+                                    } else if (bike.isChecked()){
+                                        state = "bike";
+                                    } else if (misc.isChecked()){
+                                        state = "misc";
+                                    }
+
+                                    mEvent.setAcType(state);
+                                }
+                            })
+                    .create().show();
+
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -422,6 +471,8 @@ public class ActivityFragment extends Fragment implements
     }
 
     void updateUX(){
+        getActivity().invalidateOptionsMenu();
+
         if(!started){
             mStartActivity.setVisibility(View.VISIBLE);
             mResumeActivity.setVisibility(View.GONE);
