@@ -8,6 +8,7 @@ import android.os.SystemClock;
 
 public class Time extends Statistics {
 
+    private long officialSTime = 0L;
     private long startTime = 0L;
     private long endTime = 0L;
     private long startTimeOLD = 0L;
@@ -35,6 +36,18 @@ public class Time extends Statistics {
 
     public long getCurrentTime() {
         return SystemClock.uptimeMillis();
+    }
+
+    public long getOfficialSTime() {
+        return officialSTime;
+    }
+
+    public void setOfficialSTime() {
+        this.officialSTime = SystemClock.uptimeMillis();
+    }
+
+    public void setOfficialSTime(long sT){
+        this.officialSTime = sT;
     }
 
     public long getStartTime() {
@@ -85,6 +98,10 @@ public class Time extends Statistics {
     public void setEndTime() {
         this.endTimeOLD = this.endTime;
         this.endTime = SystemClock.uptimeMillis();
+    }
+
+    public void setEndTime(long eT){
+        this.endTime = eT;
     }
 
     public long getDeltaTime() {
