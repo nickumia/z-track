@@ -43,7 +43,11 @@ public class LocationA extends Statistics {
             this.start = start;
             markers.add(start);
         }
+    }
 
+    public void setStart(double lat, double lon){
+        start.setLatitude(lat);
+        start.setLongitude(lon);
     }
 
     public Location getEnd() {
@@ -52,6 +56,11 @@ public class LocationA extends Statistics {
 
     public void setEnd(Location end) {
         this.end = end;
+    }
+
+    public void setEnd(double lat, double lon){
+        end.setLatitude(lat);
+        end.setLongitude(lon);
     }
 
     public ArrayList<Location> getMarkers() {
