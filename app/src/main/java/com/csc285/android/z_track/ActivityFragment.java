@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -79,6 +80,7 @@ public class ActivityFragment extends Fragment implements
     private static final int REQUEST_TIME = 3;
     private static final String SAVED_ACTIVE = "active";
     private static final String SAVED_STARTED = "started";
+    private static final String SAVED_RESUMED = "resumed";
     private static final String SAVED_SAVE = "save";
     private static final String SAVED_TIME = "time";
     FloatingActionButton mStartActivity;
@@ -106,9 +108,10 @@ public class ActivityFragment extends Fragment implements
     boolean started = false;
     boolean active = false;
     boolean save = false;
+    boolean resumed = false;
     int marker_photo_idx = 0;
 
-//    private SharedPreferences mPrefs;
+    private SharedPreferences mPrefs;
 
     private static final String[] LOCATION_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -137,6 +140,7 @@ public class ActivityFragment extends Fragment implements
             active = savedInstanceState.getBoolean(SAVED_ACTIVE);
             started = savedInstanceState.getBoolean(SAVED_STARTED);
             save = savedInstanceState.getBoolean(SAVED_SAVE);
+            resumed = savedInstanceState.getBoolean(SAVED_RESUMED);
         }
 
         mEvent = EventLab.get(getActivity()).getTempEvent();
@@ -156,10 +160,11 @@ public class ActivityFragment extends Fragment implements
 
         // Reference for SharedPreferences :
         // https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
-//        mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
-//        active = mPrefs.getBoolean("active", false);
-//        save = mPrefs.getBoolean("save", false);
-//        started = mPrefs.getBoolean("started", false);
+        mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
+        active = mPrefs.getBoolean(SAVED_ACTIVE, false);
+        save = mPrefs.getBoolean(SAVED_SAVE, false);
+        started = mPrefs.getBoolean(SAVED_STARTED, false);
+        resumed = mPrefs.getBoolean(SAVED_RESUMED, false);
 
         setHasOptionsMenu(true);
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
@@ -195,6 +200,7 @@ public class ActivityFragment extends Fragment implements
         outState.putBoolean(SAVED_SAVE, save);
         outState.putBoolean(SAVED_ACTIVE, active);
         outState.putString(SAVED_TIME, now.getQTime());
+        outState.putBoolean(SAVED_RESUMED, resumed);
     }
 
     @Override
@@ -237,11 +243,14 @@ public class ActivityFragment extends Fragment implements
             @Override
             public void onClick(View view) {
                 // Start Recording
+                EventLab.get(getActivity()).addEvent(mEvent);
                 if (mClient.isConnected()) getLocation();
                 mTracking.setStart(currentLocation);
+                now.setOfficialSTime();
                 started = true;
                 active = true;
                 save = false;
+                resumed = false;
                 updateTime();
                 updateUX();
             }
@@ -253,6 +262,7 @@ public class ActivityFragment extends Fragment implements
                 // Pause Recording
                 active = false;
                 save = false;
+                resumed = false;
                 updateTime();
                 updateUX();
             }
@@ -264,6 +274,7 @@ public class ActivityFragment extends Fragment implements
                 // Resume Recording
                 active = true;
                 save = false;
+                resumed = true;
                 updateTime();
                 updateUX();
             }
@@ -275,6 +286,7 @@ public class ActivityFragment extends Fragment implements
                 // Stop Recording
                 active = false;
                 save = true;
+                resumed = false;
                 updateTime();
                 updateUX();
             }
@@ -435,10 +447,17 @@ public class ActivityFragment extends Fragment implements
     }
 
     void updateTime(){
-        if( active & !save && started){
-            now.addDeltaTime();
+        if( active && !save && started && !resumed){
+            now.setOfficialSTime();
             now.setStartTime();
             if(mClient.isConnected()) getLocation();
+            timer.postDelayed(runnable, 0);
+            accelR.setLastUpdate(now.getCurrentTime());
+        }
+
+        if( active && !save && started && resumed){
+            now.addDeltaTime();
+            now.setStartTime();
             timer.postDelayed(runnable, 0);
             accelR.setLastUpdate(now.getCurrentTime());
         }
@@ -786,22 +805,16 @@ public class ActivityFragment extends Fragment implements
     @Override
     public void onPause() {
         super.onPause();
-//        stopLocationUpdates();
 
-//        SharedPreferences.Editor ed = mPrefs.edit();
-////        ed.putBoolean("active", active);
-////        ed.putBoolean("save", save);
-////        ed.putBoolean("started", started);
-////        ed.putBoolean("location", mRequestingLocationUpdates);
-//        ed.putBoolean("active", false);
-//        ed.putBoolean("save", false);
-//        ed.putBoolean("started", false);
-//        ed.putBoolean("location", false);
-//        ed.commit();
-
-//        stopLocationUpdates();
         updateEvent();
         mSensorManager.unregisterListener(this);
+
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putBoolean(SAVED_ACTIVE, active);
+        ed.putBoolean(SAVED_SAVE, save);
+        ed.putBoolean(SAVED_STARTED, started);
+        ed.putBoolean(SAVED_RESUMED, resumed);
+        ed.commit();
     }
 
     @Override
