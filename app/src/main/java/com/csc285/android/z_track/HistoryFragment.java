@@ -1,5 +1,6 @@
 package com.csc285.android.z_track;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,7 +22,7 @@ public class HistoryFragment extends Fragment {
     private static final String TAG = "HistoryFragment";
     private RecyclerView mEventRecyclerView;
     private EventAdapter mAdapter;
-    private Event mEvent;
+    private Callbacks mCallbacks;
 
     public static HistoryFragment newInstance()
     {
@@ -51,7 +52,7 @@ public class HistoryFragment extends Fragment {
         private Event mEvent;
 
         EventHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.list_stats_item, parent, false));
+            super(inflater.inflate(R.layout.list_history_item, parent, false));
 
             itemView.setOnClickListener(this);
             mNameTextView = (TextView) itemView.findViewById(R.id.event_title);
@@ -73,7 +74,7 @@ public class HistoryFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-//            mCallbacks.onCrimeSelected(mCrime);
+            mCallbacks.onEventSelected(mEvent);
         }
     }
 
@@ -115,5 +116,21 @@ public class HistoryFragment extends Fragment {
             mAdapter.setmEvent(events);
             mAdapter.notifyDataSetChanged();
         }
+    }
+
+    interface Callbacks {
+        void onEventSelected(Event event);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallbacks = (Callbacks) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
     }
 }
