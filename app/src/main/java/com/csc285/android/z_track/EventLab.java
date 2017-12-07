@@ -91,11 +91,17 @@ public class EventLab {
 
         Time t = (Time) event.getStat(R.string.activity_item_time);
         values.put(EventDbSchema.EventTable.Cols.START_TIME,
-                t.getStartTime());
+                t.getOfficialSTime());
         values.put(EventDbSchema.EventTable.Cols.END_TIME,
                 t.getEndTime());
 
         return values;
+    }
+
+    void addEvent(Event c) {
+//        mCrimes.add(c);
+        ContentValues values = getContentValues(c);
+        mDatabase.insert(EventDbSchema.EventTable.NAME, null, values);
     }
 
     public void updateEvent(Event event) {
@@ -108,7 +114,7 @@ public class EventLab {
 
     public List<Event> getEvents() {
         List<Event> crimes = new ArrayList<>();
-        EventCursorWrapper cursor = queryCrimes(null, null);
+        EventCursorWrapper cursor = queryEvents(null, null);
         try {
             cursor.moveToFirst();
             while (!cursor.isAfterLast()) {
@@ -128,10 +134,11 @@ public class EventLab {
     }
 
     public Event getEvent(UUID id) {
-        EventCursorWrapper cursor = queryCrimes(
+        EventCursorWrapper cursor = queryEvents(
                 EventDbSchema.EventTable.Cols.UUID + " = ?",
                 new String[] { id.toString() }
         );
+
         try {
             if (cursor.getCount() == 0) {
                 return null;
@@ -143,7 +150,7 @@ public class EventLab {
         }
     }
 
-    private EventCursorWrapper queryCrimes(String whereClause, String[] whereArgs){
+    private EventCursorWrapper queryEvents(String whereClause, String[] whereArgs){
         Cursor cursor = mDatabase.query(
                 EventDbSchema.EventTable.NAME,
                 null, // columns - null selects all columns
