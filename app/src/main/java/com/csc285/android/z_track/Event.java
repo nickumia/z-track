@@ -7,6 +7,7 @@ import com.csc285.android.z_track.Statistics.Pace;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
 import com.csc285.android.z_track.Statistics.Velocity;
+import com.csc285.android.z_track.database.EventDbSchema;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,7 +34,9 @@ public class Event {
     private Date mDate;
     private long mTime;
     private ArrayList<Statistics> mStats = new ArrayList<>();
-    private ArrayList<String> markers = new ArrayList<>();
+    private ArrayList<String> markerPhotoFileNames = new ArrayList<>();
+
+    static double slat, slon, elat, elon = -1;
 
     Event(){
         this(UUID.randomUUID());
@@ -117,17 +120,71 @@ public class Event {
         return null;
     }
 
+    public void setmStats(Object stat, String type){
+        for (Statistics s : mStats){
+            if (s instanceof Distance) {
+                if (type.equals(EventDbSchema.EventTable.Cols.DISTANCE)) {
+                    ((Distance) s).setTotalDistance((float) stat);
+                }
+            }
+
+            if (s instanceof Pace) {
+                if (type.equals(EventDbSchema.EventTable.Cols.PACE)) {
+                    ((Pace) s).setPace((float) stat);
+                }
+            }
+
+            if (s instanceof Velocity) {
+                if (type.equals(EventDbSchema.EventTable.Cols.TOP_VELOCITY)) {
+                    ((Velocity) s).setTopVelocity((float) stat);
+                }
+
+            }
+
+            if (s instanceof LocationA) {
+                if (type.equals(EventDbSchema.EventTable.Cols.START_LOC_LAT)) {
+                    slat = (double) stat;
+                }
+                if (type.equals(EventDbSchema.EventTable.Cols.START_LOC_LON)) {
+                    slon = (double) stat;
+                }
+                if (slat != -1 && slon != -1){
+                    ((LocationA) s).setStart(slat, slon);
+                }
+
+                if (type.equals(EventDbSchema.EventTable.Cols.END_LOC_LAT)) {
+                    elat = (double) stat;
+                }
+                if (type.equals(EventDbSchema.EventTable.Cols.END_LOC_LON)) {
+                    elon = (double) stat;
+                }
+                if (elat != -1 && elon != -1){
+                    ((LocationA) s).setEnd(elat, elon);
+                }
+            }
+
+            if (s instanceof Time){
+                if (type.equals(EventDbSchema.EventTable.Cols.START_TIME)){
+                    ((Time) s).setOfficialSTime((long) stat);
+                }
+                if (type.equals(EventDbSchema.EventTable.Cols.END_TIME)){
+                    ((Time) s).setEndTime((long) stat);
+                }
+            }
+        }
+    }
+
     public void addPhotoFilename(int idx) {
         String a = "IMG_" + getmId().toString() + idx + ".jpg";
-        markers.add(idx,a);
+        markerPhotoFileNames.add(idx,a);
     }
 
     public String getPhotoFilename(int idx) {
-        return markers.get(idx);
+        return markerPhotoFileNames.get(idx);
     }
 
     public ArrayList<String> getMarkers(){
-        return markers;
+        return markerPhotoFileNames;
     }
 
 
