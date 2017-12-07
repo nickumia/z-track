@@ -1,6 +1,7 @@
 package com.csc285.android.z_track;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,7 +23,7 @@ public class HistoryFragment extends Fragment {
     private static final String TAG = "HistoryFragment";
     private RecyclerView mEventRecyclerView;
     private EventAdapter mAdapter;
-    private Callbacks mCallbacks;
+//    private Callbacks mCallbacks;
 
     public static HistoryFragment newInstance()
     {
@@ -74,7 +75,9 @@ public class HistoryFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            mCallbacks.onEventSelected(mEvent);
+//            mCallbacks.onEventSelected(mEvent);
+            Intent ni = new Intent(getContext(), EventPagerActivity.class);
+            startActivity(ni);
         }
     }
 
@@ -125,12 +128,12 @@ public class HistoryFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mCallbacks = (Callbacks) context;
+//        mCallbacks = (Callbacks) context;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mCallbacks = null;
+//        mCallbacks = null;
     }
 }
