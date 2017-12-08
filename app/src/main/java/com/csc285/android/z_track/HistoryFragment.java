@@ -70,7 +70,10 @@ public class HistoryFragment extends Fragment {
          */
         void bind(Event event) {
             mEvent = event;
-            mNameTextView.setText(event.getmDate().toString());
+            String datetime = event.getmDate().toString();
+            mNameTextView.setText(mEvent.getAcType().toUpperCase() +
+                    " on " + datetime.substring(0,10) +
+                    " at " + datetime.substring(11,16));
         }
 
         @Override
