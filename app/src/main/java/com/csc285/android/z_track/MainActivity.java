@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final String A_TAG = "ActivityFragment";
     private static final String EXTRA_EVENT_ID = "com.csc285.android.z_track.event_id";
+    public static String UNIT = "SI";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,5 +78,12 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        getSupportActionBar().setTitle(R.string.app_name);
     }
 }
