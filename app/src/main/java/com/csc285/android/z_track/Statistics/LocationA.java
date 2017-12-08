@@ -2,10 +2,12 @@ package com.csc285.android.z_track.Statistics;
 
 import android.location.Location;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.ArrayList;
 
 /**
- * Created by nicku on 11/26/2017.
+ * Class to track location events
  */
 
 public class LocationA extends Statistics {
@@ -14,6 +16,7 @@ public class LocationA extends Statistics {
     private Location start = new Location("dum");
     private Location end = new Location("dum");
     private ArrayList<Location> markers = new ArrayList<>();
+    private ArrayList<LatLng> path = new ArrayList<>();
     private ArrayList<String> marker_time = new ArrayList<>();
 
     public LocationA(){
@@ -72,5 +75,13 @@ public class LocationA extends Statistics {
     public void addMarkers(Location markers, String time) {
         this.markers.add(markers);
         this.marker_time.add(time);
+    }
+
+    public ArrayList<LatLng> getPath() {
+        return path;
+    }
+
+    public void addToPath(LatLng pathPoint) {
+        this.path.add(pathPoint);
     }
 }
