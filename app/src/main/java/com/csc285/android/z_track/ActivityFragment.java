@@ -195,7 +195,7 @@ public class ActivityFragment extends Fragment implements
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         accelR = new RecordSensor();
 
-//        registerSensors();
+        registerSensors();
         timer = new Handler();
 
         locationManager = (LocationManager)getActivity().getSystemService(LOCATION_SERVICE);
@@ -403,16 +403,27 @@ public class ActivityFragment extends Fragment implements
                 updateUX();
                 updateUI();
 
-                if (EventLab.get(getActivity()).Exists(mEvent.getmId().toString())) {
-                    FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
-                    fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId()));
-                    fm.addToBackStack(null).commit();
-                } else {
+
+                FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
+                fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId()));
+                fm.addToBackStack(null).commit();
+                /*} else {
                     // Refresh Activity from activity
                     // https://stackoverflow.com/questions/3053761/reload-activity-in-android
                     getActivity().finish();
                     startActivity(getActivity().getIntent());
-                }
+                }*/
+
+//                if (EventLab.get(getActivity()).Exists(mEvent.getmId().toString())) {
+//                    FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
+//                    fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId()));
+//                    fm.addToBackStack(null).commit();
+//                } else {
+//                    // Refresh Activity from activity
+//                    // https://stackoverflow.com/questions/3053761/reload-activity-in-android
+//                    getActivity().finish();
+//                    startActivity(getActivity().getIntent());
+//                }
             }
         });
 
@@ -860,7 +871,7 @@ public class ActivityFragment extends Fragment implements
         try {
             PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
                     mClient, mLocationRequest, this);
-            Log.d(TAG, "Location update started ..............: ");
+            Log.d(TAG, "Location update started ..............: " + pendingResult.toString());
         } catch (SecurityException xe){
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
@@ -871,14 +882,14 @@ public class ActivityFragment extends Fragment implements
         Log.d(TAG, "Location update stopped .......................");
     }
 
-    private void handleNewLocation(Location location) {
-        Log.d(TAG, location.toString());
-        double currentLatitude = location.getLatitude();
-        double currentLongitude = location.getLongitude();
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 21));
-    }
+//    private void handleNewLocation(Location location) {
+//        Log.d(TAG, location.toString());
+//        double currentLatitude = location.getLatitude();
+//        double currentLongitude = location.getLongitude();
+//        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+//        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 21));
+//    }
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -962,8 +973,7 @@ public class ActivityFragment extends Fragment implements
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_NORMAL);
 
-        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-
+//        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         compass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
         if (compass != null) {
             mSensorManager.registerListener(compassEventListener, compass,
@@ -986,7 +996,7 @@ public class ActivityFragment extends Fragment implements
         public void onSensorChanged(SensorEvent event) {
             // angle between the magnetic north direction
             // 0=North, 90=East, 180=South, 270=West
-            float azimuth = event.values[0];
+//            float azimuth = event.values[0];
 //            Log.d(TAG, Float.toString(azimuth));
 //            compassView.updateData(azimuth);
         }

@@ -20,7 +20,7 @@ public class EventFragment extends Fragment {
 
     public static final String ARG_EVENT_ID = "event_id";
     Event mEvent;
-    private Callbacks mCallbacks;
+//    private Callbacks mCallbacks;
 
     TextView eventNameTextView;
 
@@ -39,6 +39,13 @@ public class EventFragment extends Fragment {
         UUID eventId = (UUID) getArguments().getSerializable(ARG_EVENT_ID);
         mEvent = EventLab.get(getActivity()).getEvent(eventId);
 
+        // TODO: WHY DOES SYSTEM.OUT PRINT!!!!!!
+        if (mEvent == null){
+            getActivity().finish();
+            startActivity(getActivity().getIntent());
+            System.out.println("WHATZ@DFSDF");
+        }
+
         setHasOptionsMenu(true);
     }
 
@@ -48,7 +55,6 @@ public class EventFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_event, parent, false);
 
         eventNameTextView = (TextView) v.findViewById(R.id.event_name);
-
         eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
 
         return v;
@@ -62,7 +68,7 @@ public class EventFragment extends Fragment {
 
     private void updateEvent() {
         EventLab.get(getActivity()).updateEvent(mEvent);
-        mCallbacks.onEventUpdated(mEvent);
+//        mCallbacks.onEventUpdated(mEvent);
     }
 
     public interface Callbacks {
@@ -72,14 +78,13 @@ public class EventFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        System.out.println(context);
-        mCallbacks = (Callbacks) context;
+//        mCallbacks = (Callbacks) context;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mCallbacks = null;
+//        mCallbacks = null;
     }
 
     @Override
@@ -97,8 +102,7 @@ public class EventFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        EventLab.get(getActivity())
-                .updateEvent(mEvent);
+        EventLab.get(getActivity()).updateEvent(mEvent);
     }
 
 }
