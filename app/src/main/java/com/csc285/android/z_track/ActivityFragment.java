@@ -9,11 +9,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.widget.NestedScrollView;
@@ -35,7 +39,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,8 +47,10 @@ import com.csc285.android.z_track.RecordSensor.RecordSensor;
 import com.csc285.android.z_track.Statistics.LocationA;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -56,6 +61,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,6 +70,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static android.content.Context.LOCATION_SERVICE;
 
 /**
  * Created by nick on 11/16/2017.
@@ -72,7 +81,10 @@ import java.util.concurrent.TimeUnit;
 public class ActivityFragment extends Fragment implements
         SensorEventListener,
         OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener {
+        com.google.android.gms.location.LocationListener,
+        GoogleMap.OnMarkerClickListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener{
 
     private static final String TAG = "ActivityFragment";
     private static final String ARG_EVENT_ID = "event_id";
@@ -86,6 +98,7 @@ public class ActivityFragment extends Fragment implements
     private static final String SAVED_RESUMED = "resumed";
     private static final String SAVED_SAVE = "save";
     private static final String SAVED_TIME = "time";
+    private static final String SAVED_STATE= "state";
     FloatingActionButton mStartActivity;
     FloatingActionButton mPauseActivity;
     FloatingActionButton mResumeActivity;
@@ -102,17 +115,24 @@ public class ActivityFragment extends Fragment implements
     RecordSensor accelR, compassR;
     Sensor accel, compass;
     File mPhotoFile;
+    Polyline path;
+    long mLastUpdateTime;
+    private static final long INTERVAL = 1000 * 60 * 1; //1 minute
+    private static final long FASTEST_INTERVAL = 1000 * 60 * 1; // 1 minute
+    private LocationRequest mLocationRequest;
 
     GoogleApiClient mClient;
     private GoogleMap mMap;
     Location currentLocation;
+    private LocationListener locationListener;
+    private LocationManager locationManager;
 
 
     boolean started = false;
     boolean active = false;
     boolean save = false;
     boolean resumed = false;
-    String state = "";
+    String state = "misc";
     int marker_photo_idx = 0;
 
     private SharedPreferences mPrefs;
@@ -138,6 +158,7 @@ public class ActivityFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 //        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         if (savedInstanceState != null) {
@@ -145,6 +166,7 @@ public class ActivityFragment extends Fragment implements
             started = savedInstanceState.getBoolean(SAVED_STARTED);
             save = savedInstanceState.getBoolean(SAVED_SAVE);
             resumed = savedInstanceState.getBoolean(SAVED_RESUMED);
+            state = savedInstanceState.getString(SAVED_STATE);
         }
 
         mEvent = EventLab.get(getActivity()).getTempEvent();
@@ -159,9 +181,6 @@ public class ActivityFragment extends Fragment implements
             }
         }
 
-//        mEvent.addPhotoFilename(marker_photo_idx);
-//        mPhotoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, marker_photo_idx);
-
         // Reference for SharedPreferences :
         // https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
         mPrefs = getActivity().getSharedPreferences("Event Pref", 0);
@@ -169,14 +188,42 @@ public class ActivityFragment extends Fragment implements
         save = mPrefs.getBoolean(SAVED_SAVE, false);
         started = mPrefs.getBoolean(SAVED_STARTED, false);
         resumed = mPrefs.getBoolean(SAVED_RESUMED, false);
+        state = mPrefs.getString(SAVED_STATE, "misc");
 
-        setHasOptionsMenu(true);
+        mEvent.setAcType(state);
+
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         accelR = new RecordSensor();
 
 //        registerSensors();
         timer = new Handler();
 
+        locationManager = (LocationManager)getActivity().getSystemService(LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                currentLocation = location;
+                Log.v(TAG, "IN ON LOCATION CHANGE");
+                locationManager.removeUpdates(this);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+                Log.v(TAG, "Status changed: " + s);
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+                Log.i(TAG, "PROVIDER ENABLED: " + s);
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+                Log.e(TAG, "PROVIDER DISABLED: " + s);
+            }
+        };
+
+        createLocationRequest();
         mClient = new GoogleApiClient.Builder(getActivity())
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -190,6 +237,24 @@ public class ActivityFragment extends Fragment implements
                     }
                 })
                 .build();
+
+        if (!mClient.isConnected()){
+
+            try {
+                // Solved Callback problem
+                // https://stackoverflow.com/questions/9007600/onlocationchanged-callback-is-never-called
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, (float) 0, locationListener);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+
+                currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            } catch (SecurityException se){
+                requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+            }
+        }
+
+        if (mStatsRecyclerView != null){
+            updateUI();
+        }
     }
 
     @Override
@@ -235,7 +300,7 @@ public class ActivityFragment extends Fragment implements
 
         if (id == R.id.act_add_marker) {
             if (hasLocationPermission()) {
-                addMarker();
+                addMarkerImage();
             } else {
                 requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
             }
@@ -286,14 +351,11 @@ public class ActivityFragment extends Fragment implements
         mStopActivity = (FloatingActionButton) v.findViewById(R.id.stop_activity);
         NestedScrollView mNSV = (NestedScrollView) v.findViewById(R.id.nsv);
 
-        updateUX();
-
         mStartActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Start Recording
                 EventLab.get(getActivity()).addEvent(mEvent);
-                if (mClient.isConnected()) getLocation();
                 mTracking.setStart(currentLocation);
                 now.setOfficialSTime();
                 started = true;
@@ -333,11 +395,24 @@ public class ActivityFragment extends Fragment implements
             @Override
             public void onClick(View view) {
                 // Stop Recording
+                started = false;
                 active = false;
                 save = true;
                 resumed = false;
                 updateTime();
                 updateUX();
+                updateUI();
+
+                if (EventLab.get(getActivity()).Exists(mEvent.getmId().toString())) {
+                    FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
+                    fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId()));
+                    fm.addToBackStack(null).commit();
+                } else {
+                    // Refresh Activity from activity
+                    // https://stackoverflow.com/questions/3053761/reload-activity-in-android
+                    getActivity().finish();
+                    startActivity(getActivity().getIntent());
+                }
             }
         });
 
@@ -463,11 +538,8 @@ public class ActivityFragment extends Fragment implements
             mAdapter.notifyDataSetChanged();
         }
 
-        if (mClient.isConnected()){
-            getLocation();
-        }
-
         updateEvent();
+        drawPath();
     }
 
     void updateUX(){
@@ -478,6 +550,7 @@ public class ActivityFragment extends Fragment implements
             mResumeActivity.setVisibility(View.GONE);
             mPauseActivity.setVisibility(View.GONE);
             mStopActivity.setVisibility(View.GONE);
+            updateUI();
 
         } else {
             if (active & !save) {
@@ -485,6 +558,7 @@ public class ActivityFragment extends Fragment implements
                 mResumeActivity.setVisibility(View.GONE);
                 mPauseActivity.setVisibility(View.VISIBLE);
                 mStopActivity.setVisibility(View.VISIBLE);
+                updateUI();
             }
 
             if (!active & !save) {
@@ -501,7 +575,7 @@ public class ActivityFragment extends Fragment implements
         if( active && !save && started && !resumed){
             now.setOfficialSTime();
             now.setStartTime();
-            if(mClient.isConnected()) getLocation();
+//            if(mClient.isConnected()) getLocation();
             timer.postDelayed(runnable, 0);
             accelR.setLastUpdate(now.getCurrentTime());
         }
@@ -526,19 +600,7 @@ public class ActivityFragment extends Fragment implements
             now.setTimeSeconds(0);
             now.setTimeMinutes(0);
             now.setTimeMilli(0);
-            // EventLab.get(getActivity()).setTempEvent(null);
-        }
-    }
-
-    private void updatePhotoView(ImageView photoView, int idx) {
-        File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, idx);
-        if (photoView != null) {
-            if (photoFile == null || !photoFile.exists()) {
-                photoView.setImageDrawable(null);
-            } else {
-                Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity());
-                photoView.setImageBitmap(bitmap);
-            }
+            EventLab.get(getActivity()).setTempEvent(null);
         }
     }
 
@@ -557,6 +619,11 @@ public class ActivityFragment extends Fragment implements
             now.updateTime();
             timer.postDelayed(this, 0);
             updateUI();
+
+            if (started && (now.getCurrentTime()%1000 == 0)){
+                getGPSLocation();
+//                drawPath();
+            }
         }
 
     };
@@ -584,16 +651,6 @@ public class ActivityFragment extends Fragment implements
             getActivity().revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             updateEvent();
 
-            mMap.clear();
-            ArrayList<Location> m = mTracking.getMarkers();
-            ArrayList<String> ms = mTracking.getMarkerTitles();
-//            ArrayList<String> mi = mEvent.getMarkers();
-
-            for (int i = 0; i < m.size(); i++) {
-                File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
-                showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
-            }
-
             FragmentManager manager = getFragmentManager();
             ShowLargePictureFragment dialog = ShowLargePictureFragment
                     .newInstance(mEvent.getPhotoFilename(marker_photo_idx-1));
@@ -609,7 +666,7 @@ public class ActivityFragment extends Fragment implements
             case REQUEST_LOCATION_PERMISSIONS:
                 if (hasLocationPermission()) {
                     // Add Marker Function
-                    addMarker();
+                    addMarkerImage();
                 }
             case REQUEST_PHOTO_PERMISSIONS:
                 if (hasCameraPermission()) {
@@ -626,11 +683,10 @@ public class ActivityFragment extends Fragment implements
         mMap = googleMap;
         try {
             mMap.setMyLocationEnabled(true);
-            if(mClient.isConnected()) getLocation();
             if (currentLocation != null) {
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
                         LatLng(currentLocation.getLatitude(),
-                        currentLocation.getLongitude()), 14.0f));
+                        currentLocation.getLongitude()), 16.0f));
             }
         } catch (SecurityException xe) {
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
@@ -659,7 +715,7 @@ public class ActivityFragment extends Fragment implements
     }
 
 
-    public void addMarker(){
+    public void addMarkerImage(){
         mEvent.addPhotoFilename(marker_photo_idx);
         mPhotoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, marker_photo_idx);
         //System.out.println(currentLocation);
@@ -705,48 +761,114 @@ public class ActivityFragment extends Fragment implements
         }
     }
 
-    public void getLocation(){
-        LocationRequest request = LocationRequest.create();
-        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        request.setNumUpdates(1);
-        request.setInterval(0);
-
-        // Android Studio would not let me compile without adding this try-catch block
-        try {
-//            currentLocation = locationManager.getLastKnownLocation(locationProvider);
-            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
-                    new LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            Log.i(TAG, "Got a fix: " + location);
-                            currentLocation = location;
-                        }
-                    });
-        }catch (SecurityException xe){
-            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
-        }
+    public void createLocationRequest(){
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(INTERVAL);
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
+
+//    public void getLocation(){
+//
+//        // Android Studio would not let me compile without adding this try-catch block
+//        try {
+////            currentLocation = locationManager.getLastKnownLocation(locationProvider);
+//            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
+//                    new LocationListener() {
+//                        @Override
+//                        public void onLocationChanged(Location location) {
+//                            Log.i(TAG, "Got a fix: " + location);
+//                            currentLocation = location;
+//                        }
+//                    });
+//        } catch (SecurityException xe){
+//            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+//        }
+//    }
 
 
     // Google Maps API Marker Documentation
     // https://developers.google.com/maps/documentation/android-api/marker
     public void showMarker(Double lat, Double lon, String title, File imageFile) {
-        mMap.clear();
-        // Create a LatLng object with the given Latitude and Longitude
-        LatLng markerLoc = new LatLng(lat, lon);
-        Bitmap bitmap = PictureUtils.getScaledBitmap(imageFile.getPath(), 200,200);
+        if (imageFile.exists()) {
+            mMap.clear();
+            // Create a LatLng object with the given Latitude and Longitude
+            LatLng markerLoc = new LatLng(lat, lon);
 
-        //Add marker to map
-        mMap.addMarker(new MarkerOptions()
-                .position(markerLoc)                  // at the location you needed
-                .title(title)                         // with a title you needed
-                .snippet("")     // and also give some summary of available
-                .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-        ); // and give your animation drawable as icon
+            //Add marker to map
+            if (!active) {
+                Bitmap bitmap = PictureUtils.getScaledBitmap(imageFile.getPath(), 200, 200);
+                mMap.addMarker(new MarkerOptions()
+                        .position(markerLoc)                  // at the location you needed
+                        .title(title)                         // with a title you needed
+                        .snippet("")     // and also give some summary of available
+                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                ); // and give your animation drawable as icon
+            } else {
+                mMap.addMarker(new MarkerOptions()
+                        .position(markerLoc)                  // at the location you needed
+                        .title(title)                         // with a title you needed
+                        .snippet("")     // and also give some summary of available
+//                        .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                ); // and give your animation drawable as icon
+            }
+        }
+    }
+
+    // Method taken from :
+    // https://stackoverflow.com/questions/30249920/how-to-draw-path-as-i-move-starting-from-my-current-location-using-google-maps
+    private void drawPath(){
+
+        if (mMap != null) {
+            mMap.clear();  //clears all Markers and Polylines
+
+            PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+            for (int i = 0; i < mTracking.getPath().size(); i++) {
+                LatLng point = mTracking.getPath().get(i);
+                options.add(point);
+            }
+//            addMarkerImage(); //add Marker in current position
+            path = mMap.addPolyline(options); //add Polyline
+
+            ArrayList<Location> m = mTracking.getMarkers();
+            ArrayList<String> ms = mTracking.getMarkerTitles();
+//            ArrayList<String> mi = mEvent.getMarkers();
+
+            for (int i = 1; i < m.size(); i++) {
+                if (i < mEvent.getPhotoSize()) {
+                    File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
+                    showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
+                }
+            }
+        }
     }
 
     public void getGPSLocation(){
+        try {
+            currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+            if (mTracking != null){
+                mTracking.addToPath(latLng);
+            }
+            Log.i(TAG, "Called GPS Location");
+        } catch (SecurityException xe){
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+        }
+    }
 
+    public void startLocationUpdates() {
+        try {
+            PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mClient, mLocationRequest, this);
+            Log.d(TAG, "Location update started ..............: ");
+        } catch (SecurityException xe){
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+        }
+    }
+
+    public void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(mClient, this);
+        Log.d(TAG, "Location update stopped .......................");
     }
 
     private void handleNewLocation(Location location) {
@@ -756,6 +878,82 @@ public class ActivityFragment extends Fragment implements
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 21));
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.d(TAG, "onConnected - isConnected ...............: " + mClient.isConnected());
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, "Connection failed: " + connectionResult.toString());
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        currentLocation = location;
+        mLastUpdateTime = now.getCurrentTime();
+        float accuracy = location.getAccuracy();
+        Log.d("iFocus", "The amount of accuracy is " + accuracy);
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+
+
+        LatLng latLng = new LatLng(latitude, longitude);
+        if (mTracking != null){
+            mTracking.addToPath(latLng);
+        }
+
+//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+//
+//        try {
+//            addresses = geocoder.getFromLocation(latitude, longitude, 1);
+//        } catch (IOException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        String cityName = addresses.get(0).getAddressLine(0);
+//        String stateName = addresses.get(0).getAddressLine(1);
+//        String countryName = addresses.get(0).getAddressLine(2);
+//
+//        String[] splittedStateName = stateName.split(",");
+//        requiredArea = splittedStateName[2];
+//        Log.d("iFocus", "The value of required area is " + requiredArea);
+//
+//        city = addresses.get(0).getLocality();
+//        area = addresses.get(0).getSubLocality();
+//        String adminArea = addresses.get(0).getAdminArea();
+//        String premises = addresses.get(0).getPremises();
+//        String subAdminArea = addresses.get(0).getSubAdminArea();
+//        String featureName = addresses.get(0).getFeatureName();
+//        String phone = addresses.get(0).getPhone();
+//        country = addresses.get(0).getCountryName();
+//
+//        SharedPreferences sharedPreferences = getSharedPreferences("MyValues", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.putString("CITY", cityName);
+//        editor.putString("STATE", stateName);
+//        editor.putString("COUNTRY", countryName);
+//        editor.commit();
+//
+//        TextView mapTitle = (TextView) findViewById(R.id.textViewTitle);
+//
+//        if (requiredArea != "" && city != "" && country != "") {
+//            title = mLastUpdateTime.concat(", " + requiredArea).concat(", " + city).concat(", " + country);
+//        }
+//        else {
+//            title = mLastUpdateTime.concat(", " + area).concat(", " + city).concat(", " + country);
+//        }
+//        mapTitle.setText(title);
+
+//        drawPath();// newly added
     }
 
 
@@ -842,6 +1040,11 @@ public class ActivityFragment extends Fragment implements
     @Override
     public void onResume() {
         super.onResume();
+
+        if (mClient.isConnected()) {
+            startLocationUpdates();
+            Log.d(TAG, "Location update resumed .....................");
+        }
 //        mSensorManager.registerListener(this, Sensor.TYPE_ACCELEROMETER,
 //                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
 //        sm.registerListener(this, Sensor.TYPE_MAGNETIC_FIELD,
@@ -856,15 +1059,22 @@ public class ActivityFragment extends Fragment implements
     @Override
     public void onPause() {
         super.onPause();
+        EventLab.get(getActivity()).setTempEvent(mEvent);
 
         updateEvent();
         mSensorManager.unregisterListener(this);
+        if (mClient != null){
+            if (mClient.isConnected()){
+                stopLocationUpdates();
+            }
+        }
 
         SharedPreferences.Editor ed = mPrefs.edit();
         ed.putBoolean(SAVED_ACTIVE, active);
         ed.putBoolean(SAVED_SAVE, save);
         ed.putBoolean(SAVED_STARTED, started);
         ed.putBoolean(SAVED_RESUMED, resumed);
+        ed.putString(SAVED_STATE, state);
         ed.commit();
     }
 
