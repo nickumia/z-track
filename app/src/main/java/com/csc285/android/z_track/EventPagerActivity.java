@@ -31,12 +31,11 @@ public class EventPagerActivity extends AppCompatActivity implements EventFragme
 
         UUID crimeId = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
 
-        mViewPager = (ViewPager)
-                findViewById(R.id.event_view_pager);
+        mViewPager = (ViewPager) findViewById(R.id.event_view_pager);
         mEvent = EventLab.get(this).getEvents();
-        FragmentManager fragmentManager =
-                getSupportFragmentManager();
+        FragmentManager fragmentManager = getSupportFragmentManager();
         mViewPager.setAdapter(new FragmentStatePagerAdapter(fragmentManager) {
+
             @Override
             public Fragment getItem(int position) {
                 Event event = mEvent.get(position);
@@ -49,8 +48,7 @@ public class EventPagerActivity extends AppCompatActivity implements EventFragme
         });
 
         for (int i = 0; i < mEvent.size(); i++) {
-            if
-                    (mEvent.get(i).getmId().equals(crimeId)) {
+            if (mEvent.get(i).getmId().equals(crimeId)) {
                 mViewPager.setCurrentItem(i);
                 break;
             }
