@@ -44,9 +44,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.csc285.android.z_track.RecordSensor.RecordSensor;
+import com.csc285.android.z_track.Statistics.Distance;
+import com.csc285.android.z_track.Statistics.Elevation;
 import com.csc285.android.z_track.Statistics.LocationA;
+import com.csc285.android.z_track.Statistics.Pace;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
+import com.csc285.android.z_track.Statistics.Velocity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -112,6 +116,10 @@ public class ActivityFragment extends Fragment implements
     Handler timer;
     Time now;
     LocationA mTracking;
+    Distance mDistance;
+    Elevation mElevation;
+    Pace mPace;
+    Velocity mVelocity, mVelocityAvg;
     RecordSensor accelR, compassR;
     Sensor accel, compass;
     File mPhotoFile;
@@ -123,7 +131,6 @@ public class ActivityFragment extends Fragment implements
 
     GoogleApiClient mClient;
     private GoogleMap mMap;
-    Location currentLocation;
     private LocationListener locationListener;
     private LocationManager locationManager;
 
@@ -192,6 +199,13 @@ public class ActivityFragment extends Fragment implements
 
         mEvent.setAcType(state);
 
+        mTracking = (LocationA)mEvent.getStat(R.string.activity_item_location);
+        mDistance = (Distance)mEvent.getStat(R.string.activity_item_distance);
+        mElevation = (Elevation)mEvent.getStat(R.string.activity_item_elevation);
+        mPace = (Pace)mEvent.getStat(R.string.activity_item_pace);
+        mVelocity = (Velocity)mEvent.getStat(R.string.activity_item_topspeed);
+        mVelocityAvg = (Velocity)mEvent.getStat(R.string.activity_item_avgspeed);
+
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         accelR = new RecordSensor();
 
@@ -202,7 +216,7 @@ public class ActivityFragment extends Fragment implements
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                currentLocation = location;
+                mTracking.setCurrent(location);
                 Log.v(TAG, "IN ON LOCATION CHANGE");
                 locationManager.removeUpdates(this);
             }
@@ -246,7 +260,7 @@ public class ActivityFragment extends Fragment implements
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, (float) 0, locationListener);
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 
-                currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                mTracking.setCurrent(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
             } catch (SecurityException se){
                 requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
             }
@@ -356,7 +370,7 @@ public class ActivityFragment extends Fragment implements
             public void onClick(View view) {
                 // Start Recording
                 EventLab.get(getActivity()).addEvent(mEvent);
-                mTracking.setStart(currentLocation);
+                mTracking.setStart(mTracking.getCurrent());
                 now.setOfficialSTime();
                 started = true;
                 active = true;
@@ -403,27 +417,10 @@ public class ActivityFragment extends Fragment implements
                 updateUX();
                 updateUI();
 
-
+                EventLab.get(getActivity()).setTempEvent(null);
                 FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
-                fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId()));
+                fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId(), true));
                 fm.addToBackStack(null).commit();
-                /*} else {
-                    // Refresh Activity from activity
-                    // https://stackoverflow.com/questions/3053761/reload-activity-in-android
-                    getActivity().finish();
-                    startActivity(getActivity().getIntent());
-                }*/
-
-//                if (EventLab.get(getActivity()).Exists(mEvent.getmId().toString())) {
-//                    FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
-//                    fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId()));
-//                    fm.addToBackStack(null).commit();
-//                } else {
-//                    // Refresh Activity from activity
-//                    // https://stackoverflow.com/questions/3053761/reload-activity-in-android
-//                    getActivity().finish();
-//                    startActivity(getActivity().getIntent());
-//                }
             }
         });
 
@@ -433,7 +430,6 @@ public class ActivityFragment extends Fragment implements
         updateUI();
 
         now = (Time)mEvent.getStat(R.string.activity_item_time);
-        mTracking = (LocationA)mEvent.getStat(R.string.activity_item_location);
 
         if (savedInstanceState != null) {
             now.setQTime(savedInstanceState.getString(SAVED_TIME));
@@ -472,7 +468,11 @@ public class ActivityFragment extends Fragment implements
             mUnitsTextView = (TextView) itemView.findViewById(R.id.stats_units);
             mDataTextView = (TextView) itemView.findViewById(R.id.stats_data);
 
-            units = getResources().getStringArray(R.array.units_en);
+            if (MainActivity.UNIT.equals("SI")){
+                units = getResources().getStringArray(R.array.units_si);
+            } else {
+                units = getResources().getStringArray(R.array.units_en);
+            }
         }
 
         /** Bind
@@ -492,6 +492,26 @@ public class ActivityFragment extends Fragment implements
                 mDataTextView.setText(getString(R.string.time, now.getTimeMinutes(),
                         String.format(Locale.getDefault(), "%02d", now.getTimeSeconds()),
                         String.format(Locale.getDefault(), "%03d", now.getTimeMilli())));
+            }
+
+            if (stat instanceof Pace){
+                mDataTextView.setText("" + "" + mPace.getPace());
+            }
+
+            if (stat instanceof Velocity){
+                if (stat.getId() == R.string.activity_item_topspeed){
+                    mDataTextView.setText("" + "" + mVelocity.getTopVelocity());
+                } else {
+                    mDataTextView.setText("" + "" + mVelocityAvg.getAvgVelocity());
+                }
+            }
+
+            if (stat instanceof Distance){
+                mDataTextView.setText("" + "" + mDistance.getTotalDistance());
+            }
+
+            if (stat instanceof Elevation){
+                mDataTextView.setText("" + "" + mElevation.getElevation());
             }
 
             if (stat instanceof LocationA){
@@ -629,12 +649,10 @@ public class ActivityFragment extends Fragment implements
             Time now = (Time)mEvent.getStat(R.string.activity_item_time);
             now.updateTime();
             timer.postDelayed(this, 0);
-            updateUI();
-
             if (started && (now.getCurrentTime()%1000 == 0)){
                 getGPSLocation();
-//                drawPath();
             }
+            updateUI();
         }
 
     };
@@ -694,10 +712,10 @@ public class ActivityFragment extends Fragment implements
         mMap = googleMap;
         try {
             mMap.setMyLocationEnabled(true);
-            if (currentLocation != null) {
+            if (mTracking.getCurrent() != null) {
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
-                        LatLng(currentLocation.getLatitude(),
-                        currentLocation.getLongitude()), 16.0f));
+                        LatLng(mTracking.getCurrent().getLatitude(),
+                        mTracking.getCurrent().getLongitude()), 16.0f));
             }
         } catch (SecurityException xe) {
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
@@ -710,14 +728,23 @@ public class ActivityFragment extends Fragment implements
     @Override
     public boolean onMarkerClick(final Marker marker) {
 
-        // Retrieve the data from the marker.
-        Integer clickCount = (Integer) marker.getTag();
+        String title = marker.getTitle();
+        ArrayList<String> ms = mTracking.getMarkerTitles();
+        int idx = 1;
 
-        // Check if a click count was set, then display the click count.
-        if (clickCount != null) {
-            clickCount = clickCount + 1;
-            marker.setTag(clickCount);
+        for (int i = 1; i < ms.size(); i++){
+            if (ms.get(i).equals(title)){
+                idx = i;
+                break;
+            }
         }
+
+        FragmentManager manager = getFragmentManager();
+        ShowLargePictureFragment dialog = ShowLargePictureFragment
+                .newInstance(mEvent.getPhotoFilename(idx));
+
+        dialog.setTargetFragment(ActivityFragment.this, REQUEST_TIME);
+        dialog.show(manager, DIALOG_MARKER);
 
         // Return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur (which is for the camera to move such that the
@@ -731,10 +758,10 @@ public class ActivityFragment extends Fragment implements
         mPhotoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, marker_photo_idx);
         //System.out.println(currentLocation);
 
-        if (currentLocation != null && mPhotoFile != null) {
+        if (mTracking.getCurrent() != null && mPhotoFile != null) {
             // Open Dialog to take picture;
             long millis = now.getCurrentTime();
-            mTracking.addMarkers(currentLocation, String.format(Locale.getDefault(), "%02d:%02d:%02d",
+            mTracking.addMarkers(mTracking.getCurrent(), String.format(Locale.getDefault(), "%02d:%02d:%02d",
                     TimeUnit.MILLISECONDS.toHours(millis),
                     TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
                     TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)))
@@ -856,10 +883,11 @@ public class ActivityFragment extends Fragment implements
 
     public void getGPSLocation(){
         try {
-            currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+            mTracking.setCurrent(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+            LatLng latLng = new LatLng(mTracking.getCurrent().getLatitude(), mTracking.getCurrent().getLongitude());
             if (mTracking != null){
                 mTracking.addToPath(latLng);
+
             }
             Log.i(TAG, "Called GPS Location");
         } catch (SecurityException xe){
@@ -909,7 +937,7 @@ public class ActivityFragment extends Fragment implements
 
     @Override
     public void onLocationChanged(Location location) {
-        currentLocation = location;
+        mTracking.setCurrent(location);
         mLastUpdateTime = now.getCurrentTime();
         float accuracy = location.getAccuracy();
         Log.d("iFocus", "The amount of accuracy is " + accuracy);
@@ -1122,3 +1150,8 @@ public class ActivityFragment extends Fragment implements
 
 // Reference to draw path on map
 // https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/
+
+//                    // Refresh Activity from activity
+//                    // https://stackoverflow.com/questions/3053761/reload-activity-in-android
+//                    getActivity().finish();
+//                    startActivity(getActivity().getIntent());
