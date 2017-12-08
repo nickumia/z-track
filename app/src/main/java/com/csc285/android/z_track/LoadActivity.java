@@ -66,6 +66,7 @@ public class LoadActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Boolean result) {
+            finish();
             Intent a = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(a);
         }
