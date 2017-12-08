@@ -19,7 +19,7 @@ import java.util.UUID;
 public class EventPagerActivity extends AppCompatActivity implements EventFragment.Callbacks
 {
 
-    private static final String EXTRA_CRIME_ID = "com.csc285.android.z_track.crime_id";
+    private static final String EXTRA_EVENT_ID = "com.csc285.android.z_track.event_id";
 
     private ViewPager mViewPager;
     private List<Event> mEvent;
@@ -29,7 +29,7 @@ public class EventPagerActivity extends AppCompatActivity implements EventFragme
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_pager);
 
-        UUID crimeId = (UUID) getIntent().getSerializableExtra(EXTRA_CRIME_ID);
+        UUID crimeId = (UUID) getIntent().getSerializableExtra(EXTRA_EVENT_ID);
 
         mViewPager = (ViewPager) findViewById(R.id.event_view_pager);
         mEvent = EventLab.get(this).getEvents();
@@ -39,7 +39,7 @@ public class EventPagerActivity extends AppCompatActivity implements EventFragme
             @Override
             public Fragment getItem(int position) {
                 Event event = mEvent.get(position);
-                return EventFragment.newInstance(event.getmId());
+                return EventFragment.newInstance(event.getmId(), false);
             }
             @Override
             public int getCount() {
@@ -55,9 +55,9 @@ public class EventPagerActivity extends AppCompatActivity implements EventFragme
         }
     }
 
-    public static Intent newIntent(Context packageContext, UUID crimeId) {
+    public static Intent newIntent(Context packageContext, UUID eventId) {
         Intent intent = new Intent(packageContext, EventPagerActivity.class);
-        intent.putExtra(EXTRA_CRIME_ID, crimeId);
+        intent.putExtra(EXTRA_EVENT_ID, eventId);
         return intent;
     }
 

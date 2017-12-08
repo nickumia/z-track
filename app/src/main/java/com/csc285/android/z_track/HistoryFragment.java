@@ -79,7 +79,8 @@ public class HistoryFragment extends Fragment {
         @Override
         public void onClick(View view) {
 //            mCallbacks.onEventSelected(mEvent);
-            Intent ni = new Intent(getContext(), EventPagerActivity.class);
+            Intent ni = EventPagerActivity.newIntent(getContext(), mEvent.getmId());
+//            Intent ni = new Intent(getContext(), EventPagerActivity.class);
             startActivity(ni);
         }
     }
