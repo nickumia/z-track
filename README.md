@@ -1,14 +1,17 @@
-*App Name* as Headline
+*Z-Track*
 ======
-**App Name** is an app for ... *Add Short description here.*
+**Z-Track** is an app designed to ... 
+(1) Track and review your regimens to improve your workout and overall fitness.  
+(2) Learn about new trails and compete with others for best time, longest sustained speed or another goal.  Leave your own codename for others to challenge.
+(3) Search up your area to see what routes are popular around you
 
 #### Screenshots
 [![Screenshot Android Example](https://user-images.githubusercontent.com/7291878/32418145-51215bfe-c232-11e7-83fd-e7b802c1cfec.png)](https://user-images.githubusercontent.com/7291878/32418145-51215bfe-c232-11e7-83fd-e7b802c1cfec.png)
   * *(Add app screenshots here)*
 
-#### App Stores *(add this section if deploy to Google Play store only)*
+<!-- #### App Stores *(add this section if deploy to Google Play store only)*
 <!-- edit this image location -->
-[![Get it on Google Play](https://raw.github.com/repat/README-template/master/googleplay.png)](https://play.google.com/store/apps)
+[![Get it on Google Play](https://raw.github.com/repat/README-template/master/googleplay.png)](https://play.google.com/store/apps) -->
 
 ## Tests
 #### Works on
