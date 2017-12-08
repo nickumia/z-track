@@ -33,7 +33,7 @@ public class Event {
     private UUID mId;
     private Date mDate;
     private long mTime;
-    private String acType;
+    private String acType = "misc";
     private ArrayList<Statistics> mStats = new ArrayList<>();
     private ArrayList<String> markerPhotoFileNames = new ArrayList<>();
 
@@ -190,6 +190,10 @@ public class Event {
 
     public String getPhotoFilename(int idx) {
         return markerPhotoFileNames.get(idx);
+    }
+
+    public int getPhotoSize(){
+        return markerPhotoFileNames.size();
     }
 
     public ArrayList<String> getMarkers(){
