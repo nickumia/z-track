@@ -62,7 +62,17 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 " _id integer primary key autoincrement, " +
                 EventDbSchema.MarkerTable.Cols.UUID + ", " +
                 EventDbSchema.MarkerTable.Cols.LATITUDE + ", " +
-                EventDbSchema.MarkerTable.Cols.LONGITUDE +
+                EventDbSchema.MarkerTable.Cols.LONGITUDE + ", " +
+                EventDbSchema.MarkerTable.Cols.PHOTO +
+                ")"
+        );
+
+        db.execSQL("create table " + EventDbSchema.PathTable.NAME + " (" +
+                " _id integer primary key autoincrement, " +
+                EventDbSchema.PathTable.Cols.UUID + ", " +
+                EventDbSchema.PathTable.Cols.NUM + ", " +
+                EventDbSchema.PathTable.Cols.LATITUDE + ", " +
+                EventDbSchema.PathTable.Cols.LONGITUDE +
                 ")"
         );
     }

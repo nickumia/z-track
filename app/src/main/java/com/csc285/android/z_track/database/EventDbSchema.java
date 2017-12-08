@@ -26,6 +26,7 @@ public class EventDbSchema {
             public static final String MARKER_LOC = "location_markers";
             public static final String START_TIME = "time_start";
             public static final String END_TIME = "time_end";
+            public static final String PATH = "path";
         }
     }
 
@@ -55,6 +56,18 @@ public class EventDbSchema {
 
         public static final class Cols {
             public static final String UUID = "uuid";
+            public static final String LATITUDE = "latitude";
+            public static final String LONGITUDE = "longitude";
+            public static final String PHOTO = "photo_name";
+        }
+    }
+
+    public static final class PathTable {
+        public static final String NAME = "paths";
+
+        public static final class Cols {
+            public static final String UUID = "uuid";
+            public static final String NUM = "num";
             public static final String LATITUDE = "latitude";
             public static final String LONGITUDE = "longitude";
         }
