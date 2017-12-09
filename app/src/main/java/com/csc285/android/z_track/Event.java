@@ -173,11 +173,56 @@ public class Event {
             }
 
             if (s instanceof Time){
-                if (type.equals(EventDbSchema.EventTable.Cols.START_TIME)){
-                    ((Time) s).setOfficialSTime((long) stat);
+                if (type.equals(EventDbSchema.EventTable.Cols.TIME_M)){
+                    ((Time) s).setOfficialTimeM((int) stat);
                 }
-                if (type.equals(EventDbSchema.EventTable.Cols.END_TIME)){
-                    ((Time) s).setEndTime((long) stat);
+                if (type.equals(EventDbSchema.EventTable.Cols.TIME_S)){
+                    ((Time) s).setOfficialTimeS((int) stat);
+                }
+                if (type.equals(EventDbSchema.EventTable.Cols.TIME_MS)){
+                    ((Time) s).setOfficialTimeMS((int) stat);
+                }
+            }
+        }
+    }
+
+    public void setmStats(Object stat, int type){
+        for (Statistics s : mStats){
+            if (s instanceof Distance) {
+                if (type == R.string.activity_item_distance) {
+                    ((Distance) s).setTotalDistance(((Distance) stat).getTotalDistance());
+                }
+            }
+
+            if (s instanceof Pace) {
+                if (type == R.string.activity_item_pace) {
+                    ((Pace) s).setPace(((Pace) stat).getPace());
+                }
+            }
+
+            if (s instanceof Velocity) {
+                if (type == R.string.activity_item_topspeed) {
+                    ((Velocity) s).setTopVelocity(((Velocity) stat).getTopVelocity());
+                }
+//                if (type == R.string.activity_item_topspeed) {
+//                    ((Velocity) s).setAvgVelocity((float) stat);
+//                }
+            }
+
+            // EventDbSchema.EventTable.Cols.START_LOC_LAT
+            if (s instanceof LocationA) {
+                if (type == R.string.activity_item_location){
+                    ((LocationA) s).setStart(((LocationA) stat).getStart());
+                    ((LocationA) s).setEnd(((LocationA) stat).getEnd());
+                }
+            }
+
+            //(EventDbSchema.EventTable.Cols.START_TIME)
+            if (s instanceof Time){
+                if (type == R.string.activity_item_time){
+                    ((Time) s).setOfficialSTime(((Time) stat).getOfficialSTime());
+                    ((Time) s).setOfficialTime(((Time) stat).getOfficialTime());
+                    ((Time) s).setEndTime(((Time) stat).getEndTime());
                 }
             }
         }
