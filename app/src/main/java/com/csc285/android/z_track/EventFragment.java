@@ -25,6 +25,7 @@ import com.csc285.android.z_track.Statistics.Pace;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
 import com.csc285.android.z_track.Statistics.Velocity;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -97,6 +98,8 @@ public class EventFragment extends Fragment implements
             System.out.println("WHATZ@DFSDF");
         }
 
+        System.out.println(((Time) mEvent.getmStats().get(0)).getOfficialSTime());
+
         setHasOptionsMenu(true);
     }
 
@@ -126,12 +129,11 @@ public class EventFragment extends Fragment implements
         mVelocityAvg = (Velocity)mEvent.getStat(R.string.activity_item_avgspeed);
 
         updateUI();
+        eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
 
         mNSV.fullScroll(NestedScrollView.FOCUS_UP);
         mNSV.scrollTo(0,mNSV.getTop());
         mNSV.smoothScrollTo(0,0);
-
-        eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
 
         return v;
     }
@@ -170,9 +172,10 @@ public class EventFragment extends Fragment implements
             mUnitsTextView.setText(units[mStats.getIdx()]);
 
             if (stat instanceof Time){
-                mDataTextView.setText(getString(R.string.time, now.getTimeMinutes(),
-                        String.format(Locale.getDefault(), "%02d", now.getTimeSeconds()),
-                        String.format(Locale.getDefault(), "%03d", now.getTimeMilli())));
+                int time[] = now.getOfficialTime();
+                mDataTextView.setText(getString(R.string.time, time[0],
+                        String.format(Locale.getDefault(), "%02d", time[1]),
+                        String.format(Locale.getDefault(), "%03d", time[2])));
             }
 
             if (stat instanceof Pace){
@@ -313,7 +316,10 @@ public class EventFragment extends Fragment implements
         mMap = googleMap;
         try {
             mMap.setMyLocationEnabled(true);
-            drawPath();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
+                    LatLng(mTracking.getStart().getLatitude(),
+                    mTracking.getStart().getLongitude()), 14.0f));
+            updateUI();
         } catch (SecurityException xe) {
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
@@ -338,7 +344,7 @@ public class EventFragment extends Fragment implements
 
         FragmentManager manager = getFragmentManager();
         ShowLargePictureFragment dialog = ShowLargePictureFragment
-                .newInstance(mEvent.getPhotoFilename(idx));
+                .newInstance(mEvent.getPhotoFilename(idx), ms.get(idx));
 
         dialog.setTargetFragment(EventFragment.this, REQUEST_TIME);
         dialog.show(manager, DIALOG_MARKER);
