@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/marker_photo_large"
-    android:layout_width="match_parent"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
-    android:scaleType="centerInside"
-    android:cropToPadding="true"
-    android:background="@android:color/darker_gray" />
+    android:layout_width="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/positionView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="22sp"
+        android:padding="@dimen/activity_horizontal_margin"/>
+
+    <ImageView
+        android:id="@+id/marker_photo_large"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        android:cropToPadding="true"
+        android:background="@android:color/darker_gray" />
+
+</LinearLayout>
