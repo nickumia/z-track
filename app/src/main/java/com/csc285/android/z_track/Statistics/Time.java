@@ -8,7 +8,10 @@ import android.os.SystemClock;
 
 public class Time extends Statistics {
 
-    private long officialSTime = 0L;
+    private long offcialSTime = 0L;
+    private int officialTimeM = 0;
+    private int officialTimeS = 0;
+    private int officialTimeMS = 0;
     private long startTime = 0L;
     private long endTime = 0L;
     private long startTimeOLD = 0L;
@@ -38,16 +41,52 @@ public class Time extends Statistics {
         return SystemClock.uptimeMillis();
     }
 
+    public int[] getOfficialTime() {
+        return new int[]{officialTimeM, officialTimeS, officialTimeMS};
+    }
+
+    public void setOfficialTime() {
+        officialTimeM = timeMinutes;
+        officialTimeS = timeSeconds;
+        officialTimeMS = timeMilli;
+    }
+
+    public void setOfficialTime(int t[]) {
+        officialTimeM = t[0];
+        officialTimeS = t[1];
+        officialTimeMS = t[2];
+    }
+
+    public void setOfficialTimeM(int t) {
+        officialTimeM = t;
+    }
+
+    public void setOfficialTimeS(int t) {
+        officialTimeS = t;
+    }
+
+    public void setOfficialTimeMS(int t) {
+        officialTimeMS = t;
+    }
+
+    public int getOfficialTimeM() {
+        return officialTimeM;
+    }
+
+    public int getOfficialTimeS() {
+        return officialTimeS;
+    }
+
+    public int getOfficialTimeMS() {
+        return officialTimeMS;
+    }
+
     public long getOfficialSTime() {
-        return officialSTime;
+        return offcialSTime;
     }
 
-    public void setOfficialSTime() {
-        this.officialSTime = SystemClock.uptimeMillis();
-    }
-
-    public void setOfficialSTime(long sT){
-        this.officialSTime = sT;
+    public void setOfficialSTime(long s) {
+        this.offcialSTime = s;
     }
 
     public long getStartTime() {
