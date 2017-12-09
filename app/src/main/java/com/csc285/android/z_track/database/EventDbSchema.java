@@ -24,8 +24,9 @@ public class EventDbSchema {
             public static final String END_LOC_LAT = "location_end_lat";
             public static final String END_LOC_LON = "location_end_lon";
             public static final String MARKER_LOC = "location_markers";
-            public static final String START_TIME = "time_start";
-            public static final String END_TIME = "time_end";
+            public static final String TIME_M = "time_minutes";
+            public static final String TIME_S = "time_seconds";
+            public static final String TIME_MS = "time_milli";
             public static final String PATH = "path";
         }
     }

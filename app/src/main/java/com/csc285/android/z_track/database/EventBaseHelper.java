@@ -36,8 +36,9 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 EventDbSchema.EventTable.Cols.END_LOC_LAT + ", " +
                 EventDbSchema.EventTable.Cols.END_LOC_LON + ", " +
                 EventDbSchema.EventTable.Cols.MARKER_LOC + ", " +
-                EventDbSchema.EventTable.Cols.START_TIME + ", " +
-                EventDbSchema.EventTable.Cols.END_TIME +
+                EventDbSchema.EventTable.Cols.TIME_M + ", " +
+                EventDbSchema.EventTable.Cols.TIME_S + ", " +
+                EventDbSchema.EventTable.Cols.TIME_MS +
                 ")"
         );
 

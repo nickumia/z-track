@@ -37,8 +37,9 @@ public class EventCursorWrapper extends CursorWrapper
         double end_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LAT));
         double end_location_lon = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LON));
         float marker_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.MARKER_LOC));
-        long start_time = getLong(getColumnIndex(EventDbSchema.EventTable.Cols.START_TIME));
-        long end_time = getLong(getColumnIndex(EventDbSchema.EventTable.Cols.END_TIME));
+        int time_m = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME_M));
+        int time_s = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME_S));
+        int time_ms = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME_MS));
 
         Event event = new Event(UUID.fromString(uuidString));
         event.setmDate(new Date(date));
@@ -54,8 +55,9 @@ public class EventCursorWrapper extends CursorWrapper
         event.setmStats(end_location_lat, EventDbSchema.EventTable.Cols.END_LOC_LAT);
         event.setmStats(end_location_lon, EventDbSchema.EventTable.Cols.END_LOC_LON);
 //        event.setmStats(marker_location_lat, EventDbSchema.EventTable.Cols.MARKER_LOC);
-        event.setmStats(start_time, EventDbSchema.EventTable.Cols.START_TIME);
-        event.setmStats(end_time, EventDbSchema.EventTable.Cols.END_TIME);
+        event.setmStats(time_m, EventDbSchema.EventTable.Cols.TIME_M);
+        event.setmStats(time_s, EventDbSchema.EventTable.Cols.TIME_S);
+        event.setmStats(time_ms, EventDbSchema.EventTable.Cols.TIME_MS);
 
         return event;
     }
