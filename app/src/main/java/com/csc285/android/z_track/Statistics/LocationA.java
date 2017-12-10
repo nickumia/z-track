@@ -16,6 +16,7 @@ public class LocationA extends Statistics {
     private Location start = new Location("dum");
     private Location end = new Location("dum");
     private ArrayList<Location> markers = new ArrayList<>();
+    private ArrayList<String> markers_photo = new ArrayList<>();
     private ArrayList<LatLng> path = new ArrayList<>();
     private ArrayList<String> marker_time = new ArrayList<>();
 
@@ -72,9 +73,18 @@ public class LocationA extends Statistics {
 
     public ArrayList<String> getMarkerTitles() {return marker_time; }
 
-    public void addMarkers(Location markers, String time) {
+    public void addMarkers(Location markers, String time, String photo) {
         this.markers.add(markers);
         this.marker_time.add(time);
+        this.markers_photo.add(photo);
+    }
+
+    public ArrayList<String> getMarkers_photo() {
+        return markers_photo;
+    }
+
+    public void setMarkers_photo(String markers_photo) {
+        this.markers_photo.add(markers_photo);
     }
 
     public ArrayList<LatLng> getPath() {
@@ -83,5 +93,9 @@ public class LocationA extends Statistics {
 
     public void addToPath(LatLng pathPoint) {
         this.path.add(pathPoint);
+    }
+
+    public void addToPath(LatLng pathPoint, int i) {
+        this.path.add(i, pathPoint);
     }
 }
