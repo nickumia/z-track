@@ -154,7 +154,10 @@ public class HistoryFragment extends Fragment {
                     String.format(Locale.getDefault(), "%01f", ltDistance),
                     String.format(Locale.getDefault(), "%d", ltNum)));
         } else {
-
+            lifetimeStats.setText(getString(R.string.lifetimeStatsEN,
+                    String.format(Locale.getDefault(), "%01f", ltHours),
+                    String.format(Locale.getDefault(), "%01f", ltDistance),
+                    String.format(Locale.getDefault(), "%d", ltNum)));
         }
     }
 
