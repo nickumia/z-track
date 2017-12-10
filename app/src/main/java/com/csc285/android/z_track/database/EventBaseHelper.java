@@ -28,14 +28,14 @@ public class EventBaseHelper extends SQLiteOpenHelper
 //                EventDbSchema.EventTable.Cols.TIME + ", " +
                 EventDbSchema.EventTable.Cols.DISTANCE + ", " +
                 EventDbSchema.EventTable.Cols.PACE + ", " +
-                EventDbSchema.EventTable.Cols.ELEVATION + ", " +
+//                EventDbSchema.EventTable.Cols.ELEVATION + ", " +
                 EventDbSchema.EventTable.Cols.TOP_VELOCITY + ", " +
-                EventDbSchema.EventTable.Cols.VELOCITY + ", " +
+                EventDbSchema.EventTable.Cols.AVG_VELOCITY + ", " +
                 EventDbSchema.EventTable.Cols.START_LOC_LAT + ", " +
                 EventDbSchema.EventTable.Cols.START_LOC_LON + ", " +
                 EventDbSchema.EventTable.Cols.END_LOC_LAT + ", " +
                 EventDbSchema.EventTable.Cols.END_LOC_LON + ", " +
-                EventDbSchema.EventTable.Cols.MARKER_LOC + ", " +
+//                EventDbSchema.EventTable.Cols.MARKER_LOC + ", " +
                 EventDbSchema.EventTable.Cols.TIME_M + ", " +
                 EventDbSchema.EventTable.Cols.TIME_S + ", " +
                 EventDbSchema.EventTable.Cols.TIME_MS +
@@ -46,8 +46,8 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 " _id integer primary key autoincrement, " +
                 EventDbSchema.VelocityTable.Cols.UUID + ", " +
                 EventDbSchema.VelocityTable.Cols.NUM + ", " +
-                EventDbSchema.VelocityTable.Cols.VEL + ", " +
-                EventDbSchema.VelocityTable.Cols.PACE +
+                EventDbSchema.VelocityTable.Cols.VEL + //", " +
+//                EventDbSchema.VelocityTable.Cols.PACE +
                 ")"
         );
 
@@ -64,7 +64,8 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 EventDbSchema.MarkerTable.Cols.UUID + ", " +
                 EventDbSchema.MarkerTable.Cols.LATITUDE + ", " +
                 EventDbSchema.MarkerTable.Cols.LONGITUDE + ", " +
-                EventDbSchema.MarkerTable.Cols.PHOTO +
+                EventDbSchema.MarkerTable.Cols.PHOTO + ", " +
+                EventDbSchema.MarkerTable.Cols.INFO +
                 ")"
         );
 
