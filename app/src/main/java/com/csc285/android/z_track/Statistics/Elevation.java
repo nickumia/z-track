@@ -3,20 +3,32 @@ package com.csc285.android.z_track.Statistics;
 import java.util.ArrayList;
 
 /**
- * Created by nicku on 11/17/2017.
+ * Class to hold Elevation stats
  */
 
 public class Elevation extends Statistics {
 
-    private ArrayList<Float> elevation = new ArrayList<>();
+    private ArrayList<Double> elevation = new ArrayList<>();
     private float elevationRate = 0;
 
-    public ArrayList<Float> getElevation() {
+    public ArrayList<Double> getElevation() {
         return elevation;
     }
 
-    public void setElevation(float elevation, int i) {
+    public Double getLatestElevation() {
+        if (elevation.size() > 0) {
+            return elevation.get(elevation.size() - 1);
+        } else {
+            return 0.0;
+        }
+    }
+
+    public void setElevation(double elevation, int i) {
         this.elevation.add(i, elevation);
+    }
+
+    public void setElevation(double elevation) {
+        this.elevation.add(elevation);
     }
 
     public float getElevationRate() {
