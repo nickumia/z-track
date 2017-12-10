@@ -43,6 +43,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <Button
+                android:id="@+id/historyStart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="100dp"
+                android:paddingEnd="100dp"
+                android:text="@string/action_history"
+                android:onClick="startHistoryFragment"/>
+
 
         </LinearLayout>
 
