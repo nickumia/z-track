@@ -73,7 +73,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.LOCATION_SERVICE;
 
@@ -119,7 +118,7 @@ public class ActivityFragment extends Fragment implements
     Distance mDistance;
     Elevation mElevation;
     Pace mPace;
-    Velocity mVelocity, mVelocityAvg;
+    Velocity mVelocity, mVelocityAvg, mHeading;
     RecordSensor accelR, compassR;
     Sensor accel, compass;
     File mPhotoFile;
@@ -205,6 +204,7 @@ public class ActivityFragment extends Fragment implements
         mPace = (Pace)mEvent.getStat(R.string.activity_item_pace);
         mVelocity = (Velocity)mEvent.getStat(R.string.activity_item_topspeed);
         mVelocityAvg = (Velocity)mEvent.getStat(R.string.activity_item_avgspeed);
+        mHeading = (Velocity)mEvent.getStat(R.string.activity_item_heading);
 
         mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         accelR = new RecordSensor();
@@ -371,7 +371,7 @@ public class ActivityFragment extends Fragment implements
                 // Start Recording
                 EventLab.get(getActivity()).addEvent(mEvent);
                 mTracking.setStart(mTracking.getCurrent());
-                now.setOfficialSTime();
+                now.setOfficialSTime(now.getCurrentTime());
                 started = true;
                 active = true;
                 save = false;
@@ -413,9 +413,19 @@ public class ActivityFragment extends Fragment implements
                 active = false;
                 save = true;
                 resumed = false;
+
                 updateTime();
                 updateUX();
-                updateUI();
+
+                now.setOfficialTime();
+                mEvent.setmStats(mTracking, R.string.activity_item_location);
+                mEvent.setmStats(mDistance, R.string.activity_item_distance);
+                mEvent.setmStats(mElevation, R.string.activity_item_elevation);
+                mEvent.setmStats(mPace, R.string.activity_item_pace);
+                mEvent.setmStats(mVelocity, R.string.activity_item_topspeed);
+                mEvent.setmStats(mVelocityAvg, R.string.activity_item_avgspeed);
+                mEvent.setmStats(now, R.string.activity_item_time);
+                mEvent.setmStats(mHeading, R.string.activity_item_heading);
 
                 EventLab.get(getActivity()).setTempEvent(null);
                 FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
@@ -501,8 +511,13 @@ public class ActivityFragment extends Fragment implements
             if (stat instanceof Velocity){
                 if (stat.getId() == R.string.activity_item_topspeed){
                     mDataTextView.setText("" + "" + mVelocity.getTopVelocity());
-                } else {
+                }
+                if (stat.getId() == R.string.activity_item_avgspeed){
                     mDataTextView.setText("" + "" + mVelocityAvg.getAvgVelocity());
+                }
+                if (stat.getId() == R.string.activity_item_heading){
+                    mDataTextView.setText("" + "" +
+                            String.format(Locale.getDefault(), "%02f", mHeading.getLatestHeading()));
                 }
             }
 
@@ -511,7 +526,7 @@ public class ActivityFragment extends Fragment implements
             }
 
             if (stat instanceof Elevation){
-                mDataTextView.setText("" + "" + mElevation.getElevation());
+                mDataTextView.setText("" + "" + mElevation.getLatestElevation());
             }
 
             if (stat instanceof LocationA){
@@ -570,7 +585,7 @@ public class ActivityFragment extends Fragment implements
         }
 
         updateEvent();
-        drawPath();
+//        drawPath();
     }
 
     void updateUX(){
@@ -581,7 +596,6 @@ public class ActivityFragment extends Fragment implements
             mResumeActivity.setVisibility(View.GONE);
             mPauseActivity.setVisibility(View.GONE);
             mStopActivity.setVisibility(View.GONE);
-            updateUI();
 
         } else {
             if (active & !save) {
@@ -589,7 +603,6 @@ public class ActivityFragment extends Fragment implements
                 mResumeActivity.setVisibility(View.GONE);
                 mPauseActivity.setVisibility(View.VISIBLE);
                 mStopActivity.setVisibility(View.VISIBLE);
-                updateUI();
             }
 
             if (!active & !save) {
@@ -597,14 +610,16 @@ public class ActivityFragment extends Fragment implements
                 mPauseActivity.setVisibility(View.GONE);
                 mResumeActivity.setVisibility(View.VISIBLE);
                 mStopActivity.setVisibility(View.VISIBLE);
+//                drawMarkers();
             }
         }
 
+        updateUI();
+        drawPath();
     }
 
     void updateTime(){
         if( active && !save && started && !resumed){
-            now.setOfficialSTime();
             now.setStartTime();
 //            if(mClient.isConnected()) getLocation();
             timer.postDelayed(runnable, 0);
@@ -625,12 +640,13 @@ public class ActivityFragment extends Fragment implements
 
         if ( !active & save && started){
             started = false;
+            now.setOfficialTime();
             now.setEndTime();
             timer.removeCallbacks(runnable);
             now.resetDeltaTime();
-            now.setTimeSeconds(0);
-            now.setTimeMinutes(0);
-            now.setTimeMilli(0);
+//            now.setTimeSeconds(0);
+//            now.setTimeMinutes(0);
+//            now.setTimeMilli(0);
             EventLab.get(getActivity()).setTempEvent(null);
         }
     }
@@ -682,7 +698,7 @@ public class ActivityFragment extends Fragment implements
 
             FragmentManager manager = getFragmentManager();
             ShowLargePictureFragment dialog = ShowLargePictureFragment
-                    .newInstance(mEvent.getPhotoFilename(marker_photo_idx-1));
+                    .newInstance(mEvent.getPhotoFilename(marker_photo_idx-1), mTracking.getMarkerTitles().get(marker_photo_idx-1));
 
             dialog.setTargetFragment(ActivityFragment.this, REQUEST_TIME);
             dialog.show(manager, DIALOG_MARKER);
@@ -695,7 +711,7 @@ public class ActivityFragment extends Fragment implements
             case REQUEST_LOCATION_PERMISSIONS:
                 if (hasLocationPermission()) {
                     // Add Marker Function
-                    addMarkerImage();
+//                    addMarkerImage();
                 }
             case REQUEST_PHOTO_PERMISSIONS:
                 if (hasCameraPermission()) {
@@ -741,7 +757,7 @@ public class ActivityFragment extends Fragment implements
 
         FragmentManager manager = getFragmentManager();
         ShowLargePictureFragment dialog = ShowLargePictureFragment
-                .newInstance(mEvent.getPhotoFilename(idx));
+                .newInstance(mEvent.getPhotoFilename(idx), ms.get(idx));
 
         dialog.setTargetFragment(ActivityFragment.this, REQUEST_TIME);
         dialog.show(manager, DIALOG_MARKER);
@@ -760,13 +776,12 @@ public class ActivityFragment extends Fragment implements
 
         if (mTracking.getCurrent() != null && mPhotoFile != null) {
             // Open Dialog to take picture;
-            long millis = now.getCurrentTime();
-            mTracking.addMarkers(mTracking.getCurrent(), String.format(Locale.getDefault(), "%02d:%02d:%02d",
-                    TimeUnit.MILLISECONDS.toHours(millis),
-                    TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
-                    TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)))
+//            long millis = now.getCurrentTime();
+            mTracking.addMarkers(mTracking.getCurrent(), getString(R.string.time, now.getTimeMinutes(),
+                    String.format(Locale.getDefault(), "%02d", now.getTimeSeconds()),
+                    String.format(Locale.getDefault(), "%03d", now.getTimeMilli())),
+                    mEvent.getPhotoFilename(marker_photo_idx)
             );
-//            mEvent.addPhotoFilename(marker_photo_idx);
             marker_photo_idx++;
 
             takePicture();
@@ -806,24 +821,6 @@ public class ActivityFragment extends Fragment implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-//    public void getLocation(){
-//
-//        // Android Studio would not let me compile without adding this try-catch block
-//        try {
-////            currentLocation = locationManager.getLastKnownLocation(locationProvider);
-//            LocationServices.FusedLocationApi.requestLocationUpdates(mClient, request,
-//                    new LocationListener() {
-//                        @Override
-//                        public void onLocationChanged(Location location) {
-//                            Log.i(TAG, "Got a fix: " + location);
-//                            currentLocation = location;
-//                        }
-//                    });
-//        } catch (SecurityException xe){
-//            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
-//        }
-//    }
-
 
     // Google Maps API Marker Documentation
     // https://developers.google.com/maps/documentation/android-api/marker
@@ -858,12 +855,16 @@ public class ActivityFragment extends Fragment implements
     private void drawPath(){
 
         if (mMap != null) {
-            mMap.clear();  //clears all Markers and Polylines
+//            mMap.clear();  //clears all Markers and Polylines
 
+            mDistance.clear();
             PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
             for (int i = 0; i < mTracking.getPath().size(); i++) {
                 LatLng point = mTracking.getPath().get(i);
                 options.add(point);
+                if (i > 0) {
+                    mDistance.updateDistance(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(i-1), point));
+                }
             }
 //            addMarkerImage(); //add Marker in current position
             path = mMap.addPolyline(options); //add Polyline
@@ -872,11 +873,24 @@ public class ActivityFragment extends Fragment implements
             ArrayList<String> ms = mTracking.getMarkerTitles();
 //            ArrayList<String> mi = mEvent.getMarkers();
 
-            for (int i = 1; i < m.size(); i++) {
+
+            for (int i = 0; i < m.size(); i++) {
                 if (i < mEvent.getPhotoSize()) {
                     File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
                     showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
                 }
+            }
+        }
+    }
+
+    public void drawMarkers(){
+        ArrayList<Location> m = mTracking.getMarkers();
+        ArrayList<String> ms = mTracking.getMarkerTitles();
+
+        for (int i = 0; i < m.size(); i++) {
+            if (i < mEvent.getPhotoSize()) {
+                File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
+                showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
             }
         }
     }
@@ -887,7 +901,8 @@ public class ActivityFragment extends Fragment implements
             LatLng latLng = new LatLng(mTracking.getCurrent().getLatitude(), mTracking.getCurrent().getLongitude());
             if (mTracking != null){
                 mTracking.addToPath(latLng);
-
+                mElevation.setElevation(mTracking.getCurrent().getAltitude());
+                drawPath();
             }
             Log.i(TAG, "Called GPS Location");
         } catch (SecurityException xe){
@@ -1024,7 +1039,8 @@ public class ActivityFragment extends Fragment implements
         public void onSensorChanged(SensorEvent event) {
             // angle between the magnetic north direction
             // 0=North, 90=East, 180=South, 270=West
-//            float azimuth = event.values[0];
+            float azimuth = event.values[0];
+            mHeading.setHeading(azimuth);
 //            Log.d(TAG, Float.toString(azimuth));
 //            compassView.updateData(azimuth);
         }
