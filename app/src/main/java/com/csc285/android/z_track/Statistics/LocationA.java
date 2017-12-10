@@ -45,7 +45,7 @@ public class LocationA extends Statistics {
     public void setStart(Location start) {
         if (start != null) {
             this.start = start;
-            markers.add(start);
+//            markers.add(start);
         }
     }
 
