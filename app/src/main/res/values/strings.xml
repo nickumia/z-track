@@ -35,9 +35,12 @@
     <string name="activity_item_pace">Pace</string>
     <string name="activity_item_topspeed">Top Speed</string>
     <string name="activity_item_avgspeed">Avg. Speed</string>
+    <string name="activity_item_speed">Speeds</string>
     <string name="activity_item_elevation">Elevation</string>
     <string name="activity_item_distance">Distance</string>
     <string name="activity_item_location">Location</string>
+    <string name="activity_item_markers">Markers</string>
+    <string name="activity_item_path">Path</string>
 
     <string name="error_location">Location not found. Please Try Again.</string>
 
