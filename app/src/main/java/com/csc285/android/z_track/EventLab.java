@@ -95,11 +95,12 @@ public class EventLab {
         return values;
     }
 
-    private static ContentValues getVelocityContentValues(Event event, int i, float vel) {
+    private static ContentValues getVelocityContentValues(Event event, int i, float vel, double heading) {
         ContentValues values = new ContentValues();
         values.put(EventDbSchema.VelocityTable.Cols.UUID, event.getmId().toString());
         values.put(EventDbSchema.VelocityTable.Cols.NUM, i);
         values.put(EventDbSchema.VelocityTable.Cols.VEL, vel);
+        values.put(EventDbSchema.VelocityTable.Cols.HEADING, heading);
 
         return values;
     }
@@ -137,7 +138,7 @@ public class EventLab {
 
         Velocity v = (Velocity) c.getStat(R.string.activity_item_avgspeed);
         for(int i = 0; i<v.getVelocities().size(); i++) {
-            ContentValues val = getVelocityContentValues(c, i, v.getVelocities().get(i));
+            ContentValues val = getVelocityContentValues(c, i, v.getVelocities().get(i), v.getHeading().get(i));
             mDatabase.insert(EventDbSchema.VelocityTable.NAME, null, val);
         }
 
@@ -175,7 +176,7 @@ public class EventLab {
 
         Velocity v = (Velocity) event.getStat(R.string.activity_item_avgspeed);
         for(int i = 0; i<v.getVelocities().size(); i++) {
-            ContentValues val = getVelocityContentValues(event, i, v.getVelocities().get(i));
+            ContentValues val = getVelocityContentValues(event, i, v.getVelocities().get(i), v.getHeading().get(i));
             mDatabase.update(EventDbSchema.VelocityTable.NAME, val,
                     EventDbSchema.VelocityTable.Cols.UUID + " = ? AND " + EventDbSchema.VelocityTable.Cols.NUM + " = ?",
                     new String[] { uuidString, Integer.toString(i) });
