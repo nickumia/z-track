@@ -10,6 +10,7 @@ public class Velocity extends Statistics{
 
     private float topVelocity = 0;
     private float avgVelocity = 0;
+    private ArrayList<Float> velocities = new ArrayList<>();
 
     private ArrayList<Float> velocity = new ArrayList<>();
 
@@ -29,11 +30,11 @@ public class Velocity extends Statistics{
         this.avgVelocity = avgVelocity;
     }
 
-    public ArrayList<Float> getVelocity() {
+    public ArrayList<Float> getVelocities() {
         return velocity;
     }
 
-    public void setVelocity(ArrayList<Float> velocity) {
-        this.velocity = velocity;
+    public void setVelocities(float velocity, int i) {
+        this.velocity.add(i, velocity);
     }
 }
