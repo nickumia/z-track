@@ -11,7 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.csc285.android.z_track.Statistics.Distance;
+import com.csc285.android.z_track.Statistics.Time;
+
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by nick on 11/16/2017.
@@ -23,7 +27,12 @@ public class HistoryFragment extends Fragment {
     private static final String TAG = "HistoryFragment";
     private RecyclerView mEventRecyclerView;
     private EventAdapter mAdapter;
+    private TextView lifetimeStats;
 //    private Callbacks mCallbacks;
+
+    private double ltHours;
+    private double ltDistance;
+    private int ltNum;
 
     public static HistoryFragment newInstance()
     {
@@ -42,6 +51,8 @@ public class HistoryFragment extends Fragment {
         mEventRecyclerView = (RecyclerView) v.findViewById(R.id.stats_recycler_view);
         mEventRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mEventRecyclerView.setNestedScrollingEnabled(false);
+
+        lifetimeStats = (TextView) v.findViewById(R.id.lifetimeStats);
         updateUI();
 
         return v;
@@ -90,6 +101,19 @@ public class HistoryFragment extends Fragment {
 
         EventAdapter(List<Event> stat) {
             mEvent = stat;
+
+            double seconds = 0;
+            double dist = 0;
+            ltNum = mEvent.size();
+            for(int i = 0; i < ltNum; i++){
+                Time t = ((Time) mEvent.get(i).getStat(R.string.activity_item_time));
+                seconds += t.getOfficialTimeS() + (t.getOfficialTimeM()*60) + (t.getOfficialTimeMS()/1000);
+                dist += ((Distance) mEvent.get(i).getStat(R.string.activity_item_distance)).getTotalDistance();
+            }
+
+            ltDistance = dist;
+            ltHours = seconds/3600;
+
         }
 
         @Override
@@ -122,6 +146,15 @@ public class HistoryFragment extends Fragment {
         } else {
             mAdapter.setmEvent(events);
             mAdapter.notifyDataSetChanged();
+        }
+
+        if (MainActivity.UNIT.equals("SI")) {
+            lifetimeStats.setText(getString(R.string.lifetimeStatsSI,
+                    String.format(Locale.getDefault(), "%01f", ltHours),
+                    String.format(Locale.getDefault(), "%01f", ltDistance),
+                    String.format(Locale.getDefault(), "%d", ltNum)));
+        } else {
+
         }
     }
 
