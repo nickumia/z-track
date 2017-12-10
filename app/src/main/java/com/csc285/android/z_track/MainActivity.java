@@ -1,5 +1,6 @@
 package com.csc285.android.z_track;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -17,7 +18,10 @@ public class MainActivity extends AppCompatActivity
 
     private static final String A_TAG = "ActivityFragment";
     private static final String EXTRA_EVENT_ID = "com.csc285.android.z_track.event_id";
+    private static final String SAVED_UNIT = "units";
     public static String UNIT = "SI";
+
+    private SharedPreferences mPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +29,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mPrefs = getSharedPreferences("App Pref", 0);
+        UNIT = mPrefs.getString(SAVED_UNIT, "SI");
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -79,6 +86,14 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putString(SAVED_UNIT, UNIT);
+        ed.commit();
     }
 
     @Override
