@@ -79,12 +79,14 @@ public class LocationA extends Statistics {
         this.markers_photo.add(photo);
     }
 
-    public ArrayList<String> getMarkers_photo() {
-        return markers_photo;
+    public void addMarkers(ArrayList<Location> markers, ArrayList<String> time, ArrayList<String> photo) {
+        this.markers = markers;
+        this.marker_time = time;
+        this.markers_photo = photo;
     }
 
-    public void setMarkers_photo(String markers_photo) {
-        this.markers_photo.add(markers_photo);
+    public ArrayList<String> getMarkers_photo() {
+        return markers_photo;
     }
 
     public ArrayList<LatLng> getPath() {
@@ -99,3 +101,48 @@ public class LocationA extends Statistics {
         this.path.add(i, pathPoint);
     }
 }
+
+// If location address is needed
+//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+//
+//        try {
+//            addresses = geocoder.getFromLocation(latitude, longitude, 1);
+//        } catch (IOException e) {
+//            //  Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        String cityName = addresses.get(0).getAddressLine(0);
+//        String stateName = addresses.get(0).getAddressLine(1);
+//        String countryName = addresses.get(0).getAddressLine(2);
+//
+//        String[] splittedStateName = stateName.split(",");
+//        requiredArea = splittedStateName[2];
+//        Log.d("iFocus", "The value of required area is " + requiredArea);
+//
+//        city = addresses.get(0).getLocality();
+//        area = addresses.get(0).getSubLocality();
+//        String adminArea = addresses.get(0).getAdminArea();
+//        String premises = addresses.get(0).getPremises();
+//        String subAdminArea = addresses.get(0).getSubAdminArea();
+//        String featureName = addresses.get(0).getFeatureName();
+//        String phone = addresses.get(0).getPhone();
+//        country = addresses.get(0).getCountryName();
+//
+//        SharedPreferences sharedPreferences = getSharedPreferences("MyValues", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.putString("CITY", cityName);
+//        editor.putString("STATE", stateName);
+//        editor.putString("COUNTRY", countryName);
+//        editor.commit();
+//
+//        TextView mapTitle = (TextView) findViewById(R.id.textViewTitle);
+//
+//        if (requiredArea != "" && city != "" && country != "") {
+//            title = mLastUpdateTime.concat(", " + requiredArea).concat(", " + city).concat(", " + country);
+//        }
+//        else {
+//            title = mLastUpdateTime.concat(", " + area).concat(", " + city).concat(", " + country);
+//        }
+//        mapTitle.setText(title);
+
+//        drawPath();// newly added
