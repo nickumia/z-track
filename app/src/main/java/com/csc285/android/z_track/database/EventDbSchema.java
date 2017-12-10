@@ -38,6 +38,7 @@ public class EventDbSchema {
             public static final String UUID = "uuid";
             public static final String NUM = "num";
             public static final String VEL = "vel";
+            public static final String HEADING = "heading";
 //            public static final String PACE = "pace";
         }
     }

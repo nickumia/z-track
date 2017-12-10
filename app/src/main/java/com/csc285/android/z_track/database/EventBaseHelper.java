@@ -46,7 +46,8 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 " _id integer primary key autoincrement, " +
                 EventDbSchema.VelocityTable.Cols.UUID + ", " +
                 EventDbSchema.VelocityTable.Cols.NUM + ", " +
-                EventDbSchema.VelocityTable.Cols.VEL + //", " +
+                EventDbSchema.VelocityTable.Cols.VEL + ", " +
+                EventDbSchema.VelocityTable.Cols.HEADING +
 //                EventDbSchema.VelocityTable.Cols.PACE +
                 ")"
         );

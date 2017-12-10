@@ -66,11 +66,13 @@ public class EventCursorWrapper extends CursorWrapper
 //        String uuidString = getString(getColumnIndex(EventDbSchema.VelocityTable.Cols.UUID));
         int num = getInt(getColumnIndex(EventDbSchema.VelocityTable.Cols.NUM));
         float velo = getFloat(getColumnIndex(EventDbSchema.VelocityTable.Cols.VEL));
+        double heading = getDouble(getColumnIndex(EventDbSchema.VelocityTable.Cols.HEADING));
 
         // Array of floats
 
         Velocity vel = new Velocity();
         vel.setVelocities(velo, num);
+        vel.setHeading(heading, num);
 
         return vel;
     }
@@ -78,7 +80,7 @@ public class EventCursorWrapper extends CursorWrapper
     public Elevation getElevation() {
 //        String uuidString = getString(getColumnIndex(EventDbSchema.ElevationTable.Cols.UUID));
         int num = getInt(getColumnIndex(EventDbSchema.ElevationTable.Cols.NUM));
-        float elev = getFloat(getColumnIndex(EventDbSchema.ElevationTable.Cols.ELEVATION));
+        double elev = getDouble(getColumnIndex(EventDbSchema.ElevationTable.Cols.ELEVATION));
         // Array of floats
 
         Elevation ele = new Elevation();
