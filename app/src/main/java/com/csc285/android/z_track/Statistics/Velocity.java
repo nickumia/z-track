@@ -10,6 +10,7 @@ public class Velocity extends Statistics{
 
     private float topVelocity = 0;
     private float avgVelocity = 0;
+    private ArrayList<Double> heading = new ArrayList<>();
     private ArrayList<Float> velocities = new ArrayList<>();
 
     private ArrayList<Float> velocity = new ArrayList<>();
@@ -37,4 +38,25 @@ public class Velocity extends Statistics{
     public void setVelocities(float velocity, int i) {
         this.velocity.add(i, velocity);
     }
+
+    public ArrayList<Double> getHeading() {
+        return heading;
+    }
+
+    public double getLatestHeading() {
+        if (heading.size() > 0){
+            return heading.get(heading.size()-1);
+        } else {
+            return 0.0;
+        }
+    }
+
+    public void setHeading(double heading) {
+        this.heading.add(heading);
+    }
+
+    public void setHeading(double heading, int i){
+        this.heading.add(i, heading);
+    }
+
 }
