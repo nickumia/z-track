@@ -3,7 +3,7 @@ package com.csc285.android.z_track.Statistics;
 import java.util.ArrayList;
 
 /**
- * Created by nicku on 11/17/2017.
+ * Class to track velocity and heading
  */
 
 public class Velocity extends Statistics{
@@ -12,7 +12,6 @@ public class Velocity extends Statistics{
     private float avgVelocity = 0;
     private ArrayList<Double> heading = new ArrayList<>();
     private ArrayList<Float> velocities = new ArrayList<>();
-
     private ArrayList<Float> velocity = new ArrayList<>();
 
     public float getTopVelocity() {
