@@ -75,6 +75,10 @@ public class Event {
         stat7.setId(R.string.activity_item_location);
         stat7.setIdx(5);
 
+        Statistics stat8 = new Velocity();
+        stat8.setId(R.string.activity_item_heading);
+        stat8.setIdx(6);
+
         mStats.add(stat4);
         mStats.add(stat3);
         mStats.add(stat5);
@@ -82,6 +86,7 @@ public class Event {
         mStats.add(stat1);
         mStats.add(stat2);
         mStats.add(stat7);
+        mStats.add(stat8);
     }
 
     public UUID getmId() {
@@ -204,9 +209,12 @@ public class Event {
                 if (type == R.string.activity_item_topspeed) {
                     ((Velocity) s).setTopVelocity(((Velocity) stat).getTopVelocity());
                 }
-//                if (type == R.string.activity_item_topspeed) {
-//                    ((Velocity) s).setAvgVelocity((float) stat);
-//                }
+                if (type == R.string.activity_item_avgspeed) {
+                    ((Velocity) s).setAvgVelocity(((Velocity) stat).getAvgVelocity());
+                }
+                if (type == R.string.activity_item_heading) {
+                    ((Velocity) s).setHeading(((Velocity) stat).getLatestHeading());
+                }
             }
 
             // EventDbSchema.EventTable.Cols.START_LOC_LAT
@@ -228,13 +236,51 @@ public class Event {
         }
     }
 
+    public void setmStats(Object stat, int type, int i) {
+        for (Statistics s : mStats) {
+            if (s instanceof Velocity) {
+                if (type == (R.string.activity_item_speed)) {
+                    ((Velocity) s).setVelocities(((Velocity) stat).getVelocities().get(i),i);
+                }
+                if (type == R.string.activity_item_heading) {
+                    ((Velocity) s).setHeading(((Velocity) stat).getHeading().get(i),i);
+                }
+            }
+
+            if (s instanceof Elevation) {
+                if (type == (R.string.activity_item_elevation)) {
+                    ((Elevation) s).setElevation(((Elevation) stat).getElevation().get(i),i);
+                }
+            }
+
+            if (s instanceof LocationA) {
+                if (type == (R.string.activity_item_markers)) {
+                    ((LocationA) s).addMarkers(
+                            ((LocationA) stat).getMarkers().get(i),
+                            ((LocationA) stat).getMarkerTitles().get(i),
+                            ((LocationA) stat).getMarkers_photo().get(i)
+                    );
+                }
+
+                if (type == (R.string.activity_item_path)) {
+                    ((LocationA) s).addToPath(
+                            ((LocationA) stat).getPath().get(i),i);
+                }
+            }
+        }
+    }
+
     public void addPhotoFilename(int idx) {
         String a = "IMG_" + getmId().toString() + idx + ".jpg";
         markerPhotoFileNames.add(idx,a);
     }
 
     public String getPhotoFilename(int idx) {
-        return markerPhotoFileNames.get(idx);
+        if (markerPhotoFileNames.size() != 0){
+            return markerPhotoFileNames.get(idx);
+        } else {
+            return "";
+        }
     }
 
     public int getPhotoSize(){
