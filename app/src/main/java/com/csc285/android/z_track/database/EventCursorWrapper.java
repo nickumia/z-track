@@ -34,10 +34,10 @@ public class EventCursorWrapper extends CursorWrapper
 //        float elevation = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.ELEVATION));
         float top_velocity = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.TOP_VELOCITY));
         float avg_velocity = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.AVG_VELOCITY));
-        double start_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.START_LOC_LAT));
-        double start_location_lon = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.START_LOC_LON));
-        double end_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LAT));
-        double end_location_lon = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LON));
+        double start_location_lat = getDouble(getColumnIndex(EventDbSchema.EventTable.Cols.START_LOC_LAT));
+        double start_location_lon = getDouble(getColumnIndex(EventDbSchema.EventTable.Cols.START_LOC_LON));
+        double end_location_lat = getDouble(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LAT));
+        double end_location_lon = getDouble(getColumnIndex(EventDbSchema.EventTable.Cols.END_LOC_LON));
 //        float marker_location_lat = getFloat(getColumnIndex(EventDbSchema.EventTable.Cols.MARKER_LOC));
         int time_m = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME_M));
         int time_s = getInt(getColumnIndex(EventDbSchema.EventTable.Cols.TIME_S));
@@ -120,5 +120,23 @@ public class EventCursorWrapper extends CursorWrapper
         loc.addToPath(a, num);
 
         return loc;
+    }
+
+    public Event getSharedRoute(){
+        String uuidString = getString(getColumnIndex(EventDbSchema.SharingTable.Cols.UUID));
+        long date = getLong(getColumnIndex(EventDbSchema.SharingTable.Cols.DATE));
+        int visited = getInt(getColumnIndex(EventDbSchema.SharingTable.Cols.VISITED));
+        float distance = getFloat(getColumnIndex(EventDbSchema.SharingTable.Cols.DISTANCE));
+        double start_location_lat = getDouble(getColumnIndex(EventDbSchema.SharingTable.Cols.START_LOC_LAT));
+        double start_location_lon = getDouble(getColumnIndex(EventDbSchema.SharingTable.Cols.START_LOC_LON));
+
+        Event event = new Event(UUID.fromString(uuidString));
+        event.setmDate(new Date(date));
+        event.setVisited(visited);
+        event.setmStats(distance, EventDbSchema.EventTable.Cols.DISTANCE);
+        event.setmStats(start_location_lat, EventDbSchema.EventTable.Cols.START_LOC_LAT);
+        event.setmStats(start_location_lon, EventDbSchema.EventTable.Cols.START_LOC_LON);
+
+        return event;
     }
 }

@@ -78,6 +78,17 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 EventDbSchema.PathTable.Cols.LONGITUDE +
                 ")"
         );
+
+        db.execSQL("create table " + EventDbSchema.SharingTable.NAME + " (" +
+                " _id integer primary key autoincrement, " +
+                EventDbSchema.SharingTable.Cols.UUID + ", " +
+                EventDbSchema.SharingTable.Cols.DATE + ", " +
+                EventDbSchema.SharingTable.Cols.DISTANCE + ", " +
+                EventDbSchema.SharingTable.Cols.VISITED + ", " +
+                EventDbSchema.SharingTable.Cols.START_LOC_LAT + ", " +
+                EventDbSchema.SharingTable.Cols.START_LOC_LON +
+                ")"
+        );
     }
 
     @Override

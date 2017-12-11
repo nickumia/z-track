@@ -75,4 +75,18 @@ public class EventDbSchema {
             public static final String LONGITUDE = "longitude";
         }
     }
+
+    public static final class SharingTable {
+        public static final String NAME = "share";
+
+        public static final class Cols {
+            public static final String UUID = "uuid";
+            public static final String DATE = "date";
+            public static final String VISITED = "visited";
+            public static final String DISTANCE = "distance";
+            public static final String RATING = "rating";
+            public static final String START_LOC_LAT = "location_start_lat";
+            public static final String START_LOC_LON = "location_start_lon";
+        }
+    }
 }
