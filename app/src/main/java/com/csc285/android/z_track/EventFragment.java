@@ -10,6 +10,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -73,6 +74,7 @@ public class EventFragment extends Fragment implements
     private RecyclerView mStatsRecyclerView;
     private StatsAdapter mAdapter;
     private Button mHistoryView;
+    private Button mPostView;
     boolean mBadStart;
 
     TextView eventNameTextView;
@@ -114,6 +116,7 @@ public class EventFragment extends Fragment implements
             mHistoryView = (Button) v.findViewById(R.id.historyStart);
         } else {
             v = inflater.inflate(R.layout.fragment_event, parent, false);
+            mPostView = (Button) v.findViewById(R.id.postRoute);
         }
 
         eventNameTextView = (TextView) v.findViewById(R.id.event_name);
@@ -139,6 +142,20 @@ public class EventFragment extends Fragment implements
 //        for (int i = 0; i< mHeading.getHeading().size(); i++){
 //            System.out.println(mHeading.getHeading().get(i));
 //        }
+
+        if (mPostView != null){
+            mPostView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // Start PostFragment
+//                    Intent aIntent = new Intent(getActivity(), PostActivity.class);
+//                    startActivity(aIntent);
+                    FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
+                    fm.replace(R.id.fragment_container, PostFragment.newInstance());
+                    fm.addToBackStack(null).commit();
+                }
+            });
+        }
 
         eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
 
@@ -209,13 +226,13 @@ public class EventFragment extends Fragment implements
                 }
                 if (stat.getId() == R.string.activity_item_heading) {
                     mDataTextView.setText("" + "" +
-                            String.format(Locale.getDefault(), "%01f", mHeading.getLatestHeading()));
+                            String.format(Locale.getDefault(), "%.1f", mHeading.getLatestHeading()));
                 }
             }
 
             if (stat instanceof Distance) {
                 mDataTextView.setText("" + "" +
-                        String.format(Locale.getDefault(), "%01f", mDistance.getTotalDistance()));
+                        String.format(Locale.getDefault(), "%.4f", mDistance.getTotalDistance()));
             }
 
             if (stat instanceof Elevation) {
@@ -225,8 +242,8 @@ public class EventFragment extends Fragment implements
             if (stat instanceof LocationA) {
                 if (stat.getId() == R.string.activity_item_location) {
                     mDataTextView.setText("" +
-                            String.format(Locale.getDefault(), "%01f", mTracking.getStart().getLatitude()) + "°, " +
-                            String.format(Locale.getDefault(), "%01f", mTracking.getStart().getLongitude()) + "°");
+                            String.format(Locale.getDefault(), "%.2f", mTracking.getStart().getLatitude()) + "°, " +
+                            String.format(Locale.getDefault(), "%.2f", mTracking.getStart().getLongitude()) + "°");
                 }
             }
 
