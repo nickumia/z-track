@@ -137,24 +137,30 @@ public class EventLab {
         }
 
         Velocity v = (Velocity) c.getStat(R.string.activity_item_avgspeed);
+        Velocity v2 = (Velocity) c.getStat(R.string.activity_item_heading);
         for(int i = 0; i<v.getVelocities().size(); i++) {
-            ContentValues val = getVelocityContentValues(c, i, v.getVelocities().get(i), v.getHeading().get(i));
+            ContentValues val = getVelocityContentValues(c, i, v.getVelocities().get(i), v2.getHeading().get(i));
             mDatabase.insert(EventDbSchema.VelocityTable.NAME, null, val);
         }
 
         LocationA l = (LocationA) c.getStat(R.string.activity_item_location);
         for(int i = 0; i<l.getMarkers().size(); i++) {
             Location lT = l.getMarkers().get(i);
-            ContentValues val = getMarkerContentValues(c, lT.getLatitude(), lT.getLongitude(), c.getPhotoFilename(i), l.getMarkerTitles().get(i));
+            ContentValues val = getMarkerContentValues(c, lT.getLatitude(), lT.getLongitude(), l.getMarkers_photo().get(i), l.getMarkerTitles().get(i));
             mDatabase.insert(EventDbSchema.MarkerTable.NAME, null, val);
         }
-
-        LocationA l2 = (LocationA) c.getStat(R.string.activity_item_location);
-        for(int i = 0; i<l2.getPath().size(); i++) {
+        for(int i = 0; i<l.getPath().size(); i++) {
             LatLng lT = l.getPath().get(i);
             ContentValues val = getPathContentValues(c, i, lT.latitude, lT.longitude);
             mDatabase.insert(EventDbSchema.PathTable.NAME, null, val);
         }
+
+//        LocationA l2 = (LocationA) c.getStat(R.string.activity_item_path);
+//        for(int i = 0; i<l2.getPath().size(); i++) {
+//            LatLng lT = l.getPath().get(i);
+//            ContentValues val = getPathContentValues(c, i, lT.latitude, lT.longitude);
+//            mDatabase.insert(EventDbSchema.PathTable.NAME, null, val);
+//        }
     }
 
     void updateEvent(Event event) {
@@ -175,8 +181,14 @@ public class EventLab {
         }
 
         Velocity v = (Velocity) event.getStat(R.string.activity_item_avgspeed);
+        Velocity v2 = (Velocity) event.getStat(R.string.activity_item_heading);
         for(int i = 0; i<v.getVelocities().size(); i++) {
-            ContentValues val = getVelocityContentValues(event, i, v.getVelocities().get(i), v.getHeading().get(i));
+            ContentValues val;
+            if (v2.getHeading().size() == 0){
+                val = getVelocityContentValues(event, i, v.getVelocities().get(i), 0);
+            } else {
+                val = getVelocityContentValues(event, i, v.getVelocities().get(i), v2.getHeading().get(i));
+            }
             mDatabase.update(EventDbSchema.VelocityTable.NAME, val,
                     EventDbSchema.VelocityTable.Cols.UUID + " = ? AND " + EventDbSchema.VelocityTable.Cols.NUM + " = ?",
                     new String[] { uuidString, Integer.toString(i) });
@@ -185,20 +197,27 @@ public class EventLab {
         LocationA l = (LocationA) event.getStat(R.string.activity_item_location);
         for(int i = 0; i<l.getMarkers().size(); i++) {
             Location lT = l.getMarkers().get(i);
-            ContentValues val = getMarkerContentValues(event, lT.getLatitude(), lT.getLongitude(), event.getPhotoFilename(i), l.getMarkerTitles().get(i));
+            ContentValues val = getMarkerContentValues(event, lT.getLatitude(), lT.getLongitude(), l.getMarkers_photo().get(i), l.getMarkerTitles().get(i));
             mDatabase.update(EventDbSchema.MarkerTable.NAME, val,
                     EventDbSchema.MarkerTable.Cols.UUID + " = ?" ,
                     new String[] { uuidString });
         }
-
-        LocationA l2 = (LocationA) event.getStat(R.string.activity_item_location);
-        for(int i = 0; i<l2.getPath().size(); i++) {
+        for(int i = 0; i<l.getPath().size(); i++) {
             LatLng lT = l.getPath().get(i);
             ContentValues val = getPathContentValues(event, i, lT.latitude, lT.longitude);
             mDatabase.update(EventDbSchema.PathTable.NAME, val,
                     EventDbSchema.PathTable.Cols.UUID + " = ? AND " + EventDbSchema.PathTable.Cols.NUM + " = ?",
                     new String[] { uuidString, Integer.toString(i) });
         }
+
+//        LocationA l2 = (LocationA) event.getStat(R.string.activity_item_path);
+//        for(int i = 0; i<l2.getPath().size(); i++) {
+//            LatLng lT = l.getPath().get(i);
+//            ContentValues val = getPathContentValues(event, i, lT.latitude, lT.longitude);
+//            mDatabase.update(EventDbSchema.PathTable.NAME, val,
+//                    EventDbSchema.PathTable.Cols.UUID + " = ? AND " + EventDbSchema.PathTable.Cols.NUM + " = ?",
+//                    new String[] { uuidString, Integer.toString(i) });
+//        }
 
     }
 
@@ -240,6 +259,7 @@ public class EventLab {
     }
 
     Event getEvent(UUID id) {
+        int i = 0;
         Event event = new Event(id);
         EventCursorWrapper cursor = queryEvents(
                 EventDbSchema.EventTable.NAME,
@@ -253,6 +273,7 @@ public class EventLab {
             }
             cursor.moveToFirst();
             event = cursor.getEventD();
+//            System.out.println("Got Event");
         } finally {
             cursor.close();
         }
@@ -266,12 +287,19 @@ public class EventLab {
         try {
             if (cursorVel.getCount() != 0) {
                 cursorVel.moveToFirst();
-                event.setmStats(cursorVel.getVelocity(), R.string.activity_item_speed);
+                event.setmStats(cursorVel.getVelocity(), R.string.activity_item_avgspeed, i);
+                i++;
+                while (cursorVel.moveToNext()) {
+                    event.setmStats(cursorVel.getVelocity(), R.string.activity_item_avgspeed, i);
+                    i++;
+//                System.out.println("Got Event");
+                }
             }
         } finally {
             cursor.close();
         }
 
+        i = 0;
         EventCursorWrapper cursorElev = queryEvents(
                 EventDbSchema.VelocityTable.NAME,
                 EventDbSchema.VelocityTable.Cols.UUID + " = ?",
@@ -281,12 +309,23 @@ public class EventLab {
         try {
             if (cursorElev.getCount() != 0) {
                 cursorElev.moveToFirst();
-                event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation);
+                event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation, i);
+                i++;
+                while (cursorVel.moveToNext()) {
+                    event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation, i);
+                    i++;
+//                System.out.println("Got Event");
+                }
+
+
+//                cursorElev.moveToFirst();
+//                event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation);
             }
         } finally {
             cursor.close();
         }
 
+        i = 0;
         EventCursorWrapper cursorMark = queryEvents(
                 EventDbSchema.MarkerTable.NAME,
                 EventDbSchema.MarkerTable.Cols.UUID + " = ?",
@@ -296,12 +335,23 @@ public class EventLab {
         try {
             if (cursorMark.getCount() != 0) {
                 cursorMark.moveToFirst();
-                event.setmStats(cursorMark.getMarkers(), R.string.activity_item_markers);
+                event.setmStats(cursorMark.getMarkers(), R.string.activity_item_location, i);
+                i++;
+                while (cursorVel.moveToNext()) {
+                    event.setmStats(cursorMark.getMarkers(), R.string.activity_item_location, i);
+                    i++;
+//                System.out.println("Got Event");
+                }
+
+
+//                cursorMark.moveToFirst();
+//                event.setmStats(cursorMark.getMarkers(), R.string.activity_item_location);
             }
         } finally {
             cursor.close();
         }
 
+        i = 0;
         EventCursorWrapper cursorPath = queryEvents(
                 EventDbSchema.PathTable.NAME,
                 EventDbSchema.PathTable.Cols.UUID + " = ?",
@@ -311,7 +361,17 @@ public class EventLab {
         try {
             if (cursorPath.getCount() != 0) {
                 cursorPath.moveToFirst();
-                event.setmStats(cursorPath.getPath(), R.string.activity_item_path);
+                event.setmStats(cursorPath.getPath(), R.string.activity_item_path, i);
+                i++;
+                while (cursorVel.moveToNext()) {
+                    event.setmStats(cursorPath.getPath(), R.string.activity_item_path, i);
+                    i++;
+//                System.out.println("Got Event");
+                }
+
+
+//                cursorPath.moveToFirst();
+//                event.setmStats(cursorPath.getPath(), R.string.activity_item_location);
             }
         } finally {
             cursor.close();
