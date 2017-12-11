@@ -30,6 +30,14 @@ public class Velocity extends Statistics{
         this.avgVelocity = avgVelocity;
     }
 
+    public void calculateAvg(){
+        float sum = 0;
+        for(int i=0; i< velocity.size(); i++){
+            sum += velocity.get(i);
+        }
+        this.avgVelocity = sum/velocity.size();
+    }
+
     public ArrayList<Float> getVelocities() {
         return velocity;
     }
