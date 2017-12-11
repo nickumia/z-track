@@ -86,6 +86,23 @@ public class EventLab {
         return values;
     }
 
+    private static ContentValues getSharedRoute(Event event) {
+        ContentValues values = new ContentValues();
+        values.put(EventDbSchema.SharingTable.Cols.UUID, event.getmId().toString());
+        values.put(EventDbSchema.SharingTable.Cols.DATE, event.getmDate().getTime());
+        values.put(EventDbSchema.SharingTable.Cols.VISITED, event.getVisited());
+        values.put(EventDbSchema.SharingTable.Cols.RATING, event.getRating());
+
+        Distance d = (Distance) event.getStat(R.string.activity_item_distance);
+        values.put(EventDbSchema.SharingTable.Cols.DISTANCE, d.getTotalDistance());
+
+        LocationA l = (LocationA) event.getStat(R.string.activity_item_location);
+        values.put(EventDbSchema.SharingTable.Cols.START_LOC_LAT, l.getStart().getLatitude());
+        values.put(EventDbSchema.SharingTable.Cols.START_LOC_LON, l.getStart().getLongitude());
+
+        return values;
+    }
+
     private static ContentValues getElevationContentValues(Event event, int i, double elev) {
         ContentValues values = new ContentValues();
         values.put(EventDbSchema.ElevationTable.Cols.UUID, event.getmId().toString());
@@ -161,6 +178,53 @@ public class EventLab {
 //            ContentValues val = getPathContentValues(c, i, lT.latitude, lT.longitude);
 //            mDatabase.insert(EventDbSchema.PathTable.NAME, null, val);
 //        }
+    }
+
+    void addSharedRoute(Event c) {
+        ContentValues values = getSharedRoute(c);
+        mDatabase.insert(EventDbSchema.SharingTable.NAME, null, values);
+    }
+
+    void delSharedRoute(Event c) {
+        mDatabase.delete(
+                EventDbSchema.SharingTable.NAME,
+                EventDbSchema.SharingTable.Cols.UUID  + " = \'" + c.getmId() + "\'",
+                null);
+    }
+
+    void delEvent(Event c) {
+        mDatabase.delete(
+                EventDbSchema.EventTable.NAME,
+                EventDbSchema.EventTable.Cols.UUID  + " = \'" + c.getmId() + "\'",
+                null);
+
+        mDatabase.delete(
+                EventDbSchema.VelocityTable.NAME,
+                EventDbSchema.EventTable.Cols.UUID  + " = \'" + c.getmId() + "\'",
+                null);
+
+        mDatabase.delete(
+                EventDbSchema.ElevationTable.NAME,
+                EventDbSchema.EventTable.Cols.UUID  + " = \'" + c.getmId() + "\'",
+                null);
+
+        mDatabase.delete(
+                EventDbSchema.MarkerTable.NAME,
+                EventDbSchema.EventTable.Cols.UUID  + " = \'" + c.getmId() + "\'",
+                null);
+
+        mDatabase.delete(
+                EventDbSchema.PathTable.NAME,
+                EventDbSchema.EventTable.Cols.UUID  + " = \'" + c.getmId() + "\'",
+                null);
+    }
+
+    void updateSharedRoute( Event event ){
+        String uuidString = event.getmId().toString();
+        ContentValues values = getSharedRoute(event);
+        mDatabase.update(EventDbSchema.SharingTable.NAME, values,
+                EventDbSchema.SharingTable.Cols.UUID + " = ?",
+                new String[] { uuidString });
     }
 
     void updateEvent(Event event) {
@@ -258,8 +322,29 @@ public class EventLab {
         return new File(filesDir, event.getPhotoFilename(idx));
     }
 
-    Event getEvent(UUID id) {
+    Event getSharedRoute(UUID id) {
         int i = 0;
+        Event event = new Event(id);
+        EventCursorWrapper cursor = queryEvents(
+                EventDbSchema.EventTable.NAME,
+                EventDbSchema.EventTable.Cols.UUID + " = ?",
+                new String[]{id.toString()}
+        );
+
+        try {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToFirst();
+            event = cursor.getEventD();
+        } finally {
+            cursor.close();
+        }
+
+        return event;
+    }
+
+    Event getEvent(UUID id) {
         Event event = new Event(id);
         EventCursorWrapper cursor = queryEvents(
                 EventDbSchema.EventTable.NAME,
@@ -278,6 +363,7 @@ public class EventLab {
             cursor.close();
         }
 
+        int i = 0;
         EventCursorWrapper cursorVel = queryEvents(
                 EventDbSchema.VelocityTable.NAME,
                 EventDbSchema.VelocityTable.Cols.UUID + " = ?",
