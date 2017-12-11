@@ -75,10 +75,19 @@
     <string name="post1">Thanks for sharing!  We just need a few more pieces of information..</string>
     <string name="post1a">Scenic</string>
     <string name="post1b">Challenge</string>
-    <string name="post2">Difficulty</string>
-    <string name="post2b">Beauty</string>
+    <string name="post2">How Difficult is it??</string>
+    <string name="post2b">How Beautiful is it??</string>
     <string name="post3">Share Picture (markers)</string>
     <string name="post4">Review</string>
+
+    <string name="manual">Manual</string>
+    <string name="auto">Auto</string>
+    <string name="search_dist_1">10</string>
+    <string name="search_dist_2">15</string>
+    <string name="search_dist_3">25</string>
+    <string name="distance_title">Length</string>
+    <string name="rating_title">Rating</string>
+    <string name="dist_away_title">Distance</string>
 
     <string name="about1">The development team at Z-track is devoted to enabling it\'s users with the
         power to accurately and effectively record relevant trip information.</string>
