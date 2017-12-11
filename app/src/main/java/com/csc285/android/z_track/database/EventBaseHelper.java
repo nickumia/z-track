@@ -87,7 +87,10 @@ public class EventBaseHelper extends SQLiteOpenHelper
                 EventDbSchema.SharingTable.Cols.VISITED + ", " +
                 EventDbSchema.SharingTable.Cols.RATING + ", " +
                 EventDbSchema.SharingTable.Cols.START_LOC_LAT + ", " +
-                EventDbSchema.SharingTable.Cols.START_LOC_LON +
+                EventDbSchema.SharingTable.Cols.START_LOC_LON + ", " +
+                EventDbSchema.SharingTable.Cols.TIME_M + ", " +
+                EventDbSchema.SharingTable.Cols.TIME_S + ", " +
+                EventDbSchema.SharingTable.Cols.TIME_MS +
                 ")"
         );
     }

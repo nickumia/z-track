@@ -87,6 +87,9 @@ public class EventDbSchema {
             public static final String RATING = "rating";
             public static final String START_LOC_LAT = "location_start_lat";
             public static final String START_LOC_LON = "location_start_lon";
+            public static final String TIME_M = "time_minutes";
+            public static final String TIME_S = "time_seconds";
+            public static final String TIME_MS = "time_milli";
         }
     }
 }

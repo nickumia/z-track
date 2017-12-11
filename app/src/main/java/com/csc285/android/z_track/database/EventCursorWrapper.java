@@ -129,13 +129,19 @@ public class EventCursorWrapper extends CursorWrapper
         float distance = getFloat(getColumnIndex(EventDbSchema.SharingTable.Cols.DISTANCE));
         double start_location_lat = getDouble(getColumnIndex(EventDbSchema.SharingTable.Cols.START_LOC_LAT));
         double start_location_lon = getDouble(getColumnIndex(EventDbSchema.SharingTable.Cols.START_LOC_LON));
+        int time_m = getInt(getColumnIndex(EventDbSchema.SharingTable.Cols.TIME_M));
+        int time_s = getInt(getColumnIndex(EventDbSchema.SharingTable.Cols.TIME_S));
+        int time_ms = getInt(getColumnIndex(EventDbSchema.SharingTable.Cols.TIME_MS));
 
         Event event = new Event(UUID.fromString(uuidString));
         event.setmDate(new Date(date));
         event.setVisited(visited);
-        event.setmStats(distance, EventDbSchema.EventTable.Cols.DISTANCE);
-        event.setmStats(start_location_lat, EventDbSchema.EventTable.Cols.START_LOC_LAT);
-        event.setmStats(start_location_lon, EventDbSchema.EventTable.Cols.START_LOC_LON);
+        event.setmStats(distance, EventDbSchema.SharingTable.Cols.DISTANCE);
+        event.setmStats(start_location_lat, EventDbSchema.SharingTable.Cols.START_LOC_LAT);
+        event.setmStats(start_location_lon, EventDbSchema.SharingTable.Cols.START_LOC_LON);
+        event.setmStats(time_m, EventDbSchema.SharingTable.Cols.TIME_M);
+        event.setmStats(time_s, EventDbSchema.SharingTable.Cols.TIME_S);
+        event.setmStats(time_ms, EventDbSchema.SharingTable.Cols.TIME_MS);
 
         return event;
     }
