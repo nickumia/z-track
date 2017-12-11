@@ -71,6 +71,10 @@ public class Event {
         stat6.setId(R.string.activity_item_avgspeed);
         stat6.setIdx(2);
 
+//        Statistics stat9 = new Velocity();
+//        stat9.setId(R.string.activity_item_speed);
+//        stat9.setIdx(2);
+
         Statistics stat7 = new LocationA();
         stat7.setId(R.string.activity_item_location);
         stat7.setIdx(5);
@@ -78,6 +82,14 @@ public class Event {
         Statistics stat8 = new Velocity();
         stat8.setId(R.string.activity_item_heading);
         stat8.setIdx(6);
+
+//        Statistics stat10 = new LocationA();
+//        stat10.setId(R.string.activity_item_markers);
+//        stat10.setIdx(5);
+//
+//        Statistics stat11 = new LocationA();
+//        stat11.setId(R.string.activity_item_path);
+//        stat11.setIdx(5);
 
         mStats.add(stat4);
         mStats.add(stat3);
@@ -87,6 +99,9 @@ public class Event {
         mStats.add(stat2);
         mStats.add(stat7);
         mStats.add(stat8);
+//        mStats.add(stat9);
+//        mStats.add(stat10);
+//        mStats.add(stat11);
     }
 
     public UUID getmId() {
@@ -211,9 +226,10 @@ public class Event {
                 }
                 if (type == R.string.activity_item_avgspeed) {
                     ((Velocity) s).setAvgVelocity(((Velocity) stat).getAvgVelocity());
+                    ((Velocity) s).setVelocities(((Velocity) stat).getVelocities());
                 }
                 if (type == R.string.activity_item_heading) {
-                    ((Velocity) s).setHeading(((Velocity) stat).getLatestHeading());
+                    ((Velocity) s).setHeading(((Velocity) stat).getHeading());
                 }
             }
 
@@ -222,6 +238,10 @@ public class Event {
                 if (type == R.string.activity_item_location){
                     ((LocationA) s).setStart(((LocationA) stat).getStart());
                     ((LocationA) s).setEnd(((LocationA) stat).getEnd());
+                    ((LocationA) s).addMarkers(
+                            ((LocationA) stat).getMarkers(),
+                            ((LocationA) stat).getMarkerTitles(),
+                            ((LocationA) stat).getMarkers_photo());
                 }
             }
 
@@ -233,13 +253,15 @@ public class Event {
                     ((Time) s).setEndTime(((Time) stat).getEndTime());
                 }
             }
+
+            //System.out.println(mTracking.getMarkers_photo());
         }
     }
 
     public void setmStats(Object stat, int type, int i) {
         for (Statistics s : mStats) {
             if (s instanceof Velocity) {
-                if (type == (R.string.activity_item_speed)) {
+                if (type == (R.string.activity_item_avgspeed)) {
                     ((Velocity) s).setVelocities(((Velocity) stat).getVelocities().get(i),i);
                 }
                 if (type == R.string.activity_item_heading) {
@@ -254,12 +276,14 @@ public class Event {
             }
 
             if (s instanceof LocationA) {
-                if (type == (R.string.activity_item_markers)) {
+                if (type == (R.string.activity_item_location)) {
                     ((LocationA) s).addMarkers(
                             ((LocationA) stat).getMarkers().get(i),
                             ((LocationA) stat).getMarkerTitles().get(i),
                             ((LocationA) stat).getMarkers_photo().get(i)
                     );
+//                    ((LocationA) s).addToPath(
+//                            ((LocationA) stat).getPath().get(i),i);
                 }
 
                 if (type == (R.string.activity_item_path)) {
