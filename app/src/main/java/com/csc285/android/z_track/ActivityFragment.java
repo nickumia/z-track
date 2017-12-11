@@ -127,6 +127,7 @@ public class ActivityFragment extends Fragment implements
     long mLastUpdateTime;
     private static final long INTERVAL = 1000 * 60 * 1; //1 minute
     private static final long FASTEST_INTERVAL = 1000 * 60 * 1; // 1 minute
+    private static final long sensorUpdateFreq = 500;
     private LocationRequest mLocationRequest;
 
     GoogleApiClient mClient;
@@ -142,6 +143,7 @@ public class ActivityFragment extends Fragment implements
     boolean rotated = false;
     String state = "misc";
     int marker_photo_idx = 0;
+    int IMPORTNAT_INDEX = 0;
 
     private SharedPreferences mPrefs;
 
@@ -423,6 +425,7 @@ public class ActivityFragment extends Fragment implements
                 updateUX();
 
                 now.setOfficialTime();
+                mVelocityAvg.setVelocities(mVelocity.getVelocities());
                 mEvent.setmStats(mTracking, R.string.activity_item_location);
                 mEvent.setmStats(mDistance, R.string.activity_item_distance);
                 mEvent.setmStats(mElevation, R.string.activity_item_elevation);
@@ -517,10 +520,15 @@ public class ActivityFragment extends Fragment implements
 
             if (stat instanceof Velocity) {
                 if (stat.getId() == R.string.activity_item_topspeed) {
-                    mDataTextView.setText("" + "" + mVelocity.getTopVelocity());
+                    mDataTextView.setText("" + "" +
+                        String.format(Locale.getDefault(), "%.4f", mVelocity.getTopVelocity()));
                 }
                 if (stat.getId() == R.string.activity_item_avgspeed) {
-                    mDataTextView.setText("" + "" + mVelocityAvg.getAvgVelocity());
+                    if (mVelocityAvg.getVelocities().size() != 0)
+                    mDataTextView.setText("" + "" +
+                        String.format(Locale.getDefault(), "%.4f", mVelocityAvg.getVelocities().get(mVelocityAvg.getVelocities().size()-1)));
+                    else
+                        mDataTextView.setText("0.0");
                 }
                 // 0=North, 90=East, 180=South, 270=West
                 if (stat.getId() == R.string.activity_item_heading) {
@@ -613,7 +621,6 @@ public class ActivityFragment extends Fragment implements
         }
 
         updateEvent();
-//        drawPath();
     }
 
     void updateUX(){
@@ -646,23 +653,22 @@ public class ActivityFragment extends Fragment implements
         }
 
         updateUI();
-        drawPath();
     }
 
     void updateTime(){
         if( active && !save && started && !resumed){
             now.setStartTime();
 //            if(mClient.isConnected()) getLocation();
-            timer.postDelayed(runnable, 10);
-            otherTasks.postDelayed(importantRunnable,10);
+            timer.postDelayed(runnable, 0);
+            otherTasks.postDelayed(importantRunnable,sensorUpdateFreq);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
         if( active && !save && started && resumed){
             if (!rotated) now.addDeltaTime();
             now.setStartTime();
-            timer.postDelayed(runnable, 10);
-            otherTasks.postDelayed(importantRunnable,10);
+            timer.postDelayed(runnable, 0);
+            otherTasks.postDelayed(importantRunnable,sensorUpdateFreq);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
@@ -699,7 +705,7 @@ public class ActivityFragment extends Fragment implements
         public void run() {
             Time now = (Time)mEvent.getStat(R.string.activity_item_time);
             now.updateTime();
-            timer.postDelayed(this, 10);
+            timer.postDelayed(this, 0);
             updateUI();
         }
 
@@ -708,15 +714,17 @@ public class ActivityFragment extends Fragment implements
     public Runnable importantRunnable = new Runnable() {
 
         public void run() {
-            if (started && (now.getCurrentTime()%10 == 0)){
+//            if (started && (now.getCurrentTime()%10 == 0)){
                 getGPSLocation();
                 getElevation();
-            }
-            if (started && (now.getCurrentTime()%500 == 0)){
+//            }
+//            if (started && (now.getCurrentTime()%500 == 0)){
                 mVelocityAvg.calculateAvg();
-            }
-            otherTasks.postDelayed(this, 10);
-            drawPath();
+//            }
+//            if ((now.getCurrentTime()%1000 == 0)) {
+                drawPath();
+//            }
+            otherTasks.postDelayed(this, sensorUpdateFreq);
         }
 
     };
@@ -907,11 +915,11 @@ public class ActivityFragment extends Fragment implements
 
 //            mDistance.clear();
             PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
-            for (int i = 0; i < mTracking.getPath().size(); i++) {
-                LatLng point = mTracking.getPath().get(i);
+            if (mTracking.getPath().size() > 0) {
+                LatLng point = mTracking.getPath().get(IMPORTNAT_INDEX);
                 options.add(point);
-                if (i > 0) {
-                    mDistance.updateDistance(Math.abs(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(i-1), point)));
+                if (IMPORTNAT_INDEX > 0) {
+                    mDistance.updateDistance(Math.abs(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(IMPORTNAT_INDEX - 1), point)));
                 }
             }
 //            addMarkerImage(); //add Marker in current position
@@ -949,9 +957,10 @@ public class ActivityFragment extends Fragment implements
             LatLng latLng = new LatLng(mTracking.getCurrent().getLatitude(), mTracking.getCurrent().getLongitude());
             if (mTracking != null){
                 mTracking.addToPath(latLng);
+//                IMPORTNAT_INDEX++;
                 mElevation.setElevation(mTracking.getCurrent().getAltitude());
                 mVelocity.setVelocity(mTracking.getCurrent().getSpeed());
-                mVelocityAvg.setVelocities(mVelocity.getVelocities());
+//                mVelocityAvg.setVelocities(mVelocity.getVelocities());
 //                System.out.println(mElevation.getLatestElevation());
             }
 //            Log.i(TAG, "Called GPS Location");
@@ -1015,6 +1024,7 @@ public class ActivityFragment extends Fragment implements
     @Override
     public void onLocationChanged(Location location) {
         mTracking.setCurrent(location);
+        IMPORTNAT_INDEX++;
         mLastUpdateTime = now.getCurrentTime();
         float accuracy = location.getAccuracy();
 //        Log.d("iFocus", "The amount of accuracy is " + accuracy);
@@ -1026,7 +1036,6 @@ public class ActivityFragment extends Fragment implements
         if (mTracking != null){
             mTracking.addToPath(latLng);
         }
-//        drawPath();
     }
 
 
@@ -1135,7 +1144,7 @@ public class ActivityFragment extends Fragment implements
         if (started) {
 //            timer.postDelayed(runnable, 0);
             if (active) registerSensors();
-            otherTasks.postDelayed(importantRunnable, 10);
+            otherTasks.postDelayed(importantRunnable, sensorUpdateFreq);
         }
 
 //        mSensorManager.registerListener(this,

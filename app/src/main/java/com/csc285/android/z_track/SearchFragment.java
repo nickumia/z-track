@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.LocationA;
@@ -115,6 +116,7 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
 
         if (id == R.id.action_refresh) {
             findLocationRoutes(0);
+            Toast.makeText(getActivity(),"Updating..",Toast.LENGTH_SHORT).show();
             return true;
         }
         return super.onOptionsItemSelected(item);
