@@ -13,8 +13,10 @@ import android.widget.TextView;
 
 import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.LocationA;
+import com.csc285.android.z_track.Statistics.Rating;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
+import com.csc285.android.z_track.Statistics.Visit;
 
 import java.util.Date;
 import java.util.List;
@@ -95,7 +97,14 @@ public class ReviewFragment extends Fragment {
             mTitle.setText("" + getResources().getString(stat.getId()) + ":");
 
             if (stat instanceof Time) {
-                mData.setText(new Date(((Time)stat).getOfficialSTime()).toString());
+                if (stat.getId() == R.string.activity_item_times) {
+                    mData.setText(new Date(((Time) stat).getOfficialSTime()).toString());
+                }
+                if (stat.getId() == R.string.activity_item_time) {
+                    mData.setText(getString(R.string.time, ((Time)stat).getTimeMinutes(),
+                            String.format(Locale.getDefault(), "%02d", ((Time)stat).getTimeSeconds()),
+                            String.format(Locale.getDefault(), "%03d", ((Time)stat).getTimeMilli())));
+                }
             }
 
             if (stat instanceof Distance) {
@@ -108,6 +117,20 @@ public class ReviewFragment extends Fragment {
                     mData.setText("" +
                             String.format(Locale.getDefault(), "%.2f", ((LocationA)stat).getStart().getLatitude()) + "°, " +
                             String.format(Locale.getDefault(), "%.2f", ((LocationA)stat).getStart().getLongitude()) + "°");
+                }
+            }
+
+            if (stat instanceof Visit) {
+                if (stat.getId() == R.string.visit_title) {
+                    mData.setText("" + "" + ((Visit)stat).getVisited());
+                }
+            }
+
+            if (stat instanceof Rating) {
+                if (stat.getId() == R.string.rating_title) {
+                    mData.setText("" + "" +
+                            String.format(Locale.getDefault(), "%.1f", ((Rating)stat).getRating())
+                            );
                 }
             }
         }

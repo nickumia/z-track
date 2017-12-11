@@ -11,6 +11,8 @@ import android.widget.CheckBox;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.csc285.android.z_track.Statistics.Visit;
+
 import java.util.UUID;
 
 /**
@@ -97,11 +99,21 @@ public class PostFragment extends Fragment {
         mReview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int rating = mRating.getNumStars();
+                float rating = mRating.getRating();
                 boolean shareMarker = mMarkers.isChecked();
 
                 sharing = EventLab.get(getActivity()).getEvent(eventID);
+                sharing.setmReview(
+                        (sharing.getStat(R.string.activity_item_time)),
+                        R.string.activity_item_time);
                 sharing.setmReview(rating, R.string.rating_title);
+                sharing.setmReview(
+                        (sharing.getStat(R.string.activity_item_distance)),
+                        R.string.activity_item_distance);
+
+                Visit v = new Visit();
+                v.setVisited(1);
+                sharing.setmReview(v, R.string.visit_title);
 //                sharing.setScenic(scenic);
                 sharing.setShareMarkers(shareMarker);
 
