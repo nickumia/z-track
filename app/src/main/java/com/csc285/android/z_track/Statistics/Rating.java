@@ -6,13 +6,13 @@ package com.csc285.android.z_track.Statistics;
 
 public class Rating extends Statistics{
 
-    private int rating = 0;
+    private float rating = 0;
 
-    public int getRating() {
+    public float getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
+    public void setRating(float rating) {
         this.rating = rating;
     }
 }

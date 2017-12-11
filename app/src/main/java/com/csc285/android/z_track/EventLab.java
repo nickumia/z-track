@@ -10,8 +10,10 @@ import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.Elevation;
 import com.csc285.android.z_track.Statistics.LocationA;
 import com.csc285.android.z_track.Statistics.Pace;
+import com.csc285.android.z_track.Statistics.Rating;
 import com.csc285.android.z_track.Statistics.Time;
 import com.csc285.android.z_track.Statistics.Velocity;
+import com.csc285.android.z_track.Statistics.Visit;
 import com.csc285.android.z_track.database.EventBaseHelper;
 import com.csc285.android.z_track.database.EventCursorWrapper;
 import com.csc285.android.z_track.database.EventDbSchema;
@@ -30,6 +32,7 @@ public class EventLab {
     
     private static EventLab sStatisticsLab;
     private Event tempEvent;
+    private Event sharingEvent;
 
     private Context mContext;
     private SQLiteDatabase mDatabase;
@@ -90,8 +93,12 @@ public class EventLab {
         ContentValues values = new ContentValues();
         values.put(EventDbSchema.SharingTable.Cols.UUID, event.getmId().toString());
         values.put(EventDbSchema.SharingTable.Cols.DATE, event.getmDate().getTime());
-        values.put(EventDbSchema.SharingTable.Cols.VISITED, event.getVisited());
-        values.put(EventDbSchema.SharingTable.Cols.RATING, event.getRating());
+
+        Visit v = (Visit) event.getReview(R.string.visit_title);
+        values.put(EventDbSchema.SharingTable.Cols.VISITED, v.getVisited());
+
+        Rating r = (Rating) event.getReview(R.string.rating_title);
+        values.put(EventDbSchema.SharingTable.Cols.RATING, r.getRating());
 
         Distance d = (Distance) event.getStat(R.string.activity_item_distance);
         values.put(EventDbSchema.SharingTable.Cols.DISTANCE, d.getTotalDistance());
@@ -99,6 +106,11 @@ public class EventLab {
         LocationA l = (LocationA) event.getStat(R.string.activity_item_location);
         values.put(EventDbSchema.SharingTable.Cols.START_LOC_LAT, l.getStart().getLatitude());
         values.put(EventDbSchema.SharingTable.Cols.START_LOC_LON, l.getStart().getLongitude());
+
+        Time t = (Time) event.getStat(R.string.activity_item_time);
+        values.put(EventDbSchema.EventTable.Cols.TIME_M, t.getOfficialTimeM());
+        values.put(EventDbSchema.EventTable.Cols.TIME_S, t.getOfficialTimeS());
+        values.put(EventDbSchema.EventTable.Cols.TIME_MS, t.getOfficialTimeMS());
 
         return values;
     }
@@ -317,6 +329,23 @@ public class EventLab {
         return events;
     }
 
+    List<Event> getSharedRoutes() {
+        List<Event> events = new ArrayList<>();
+        EventCursorWrapper cursor = queryEvents(EventDbSchema.SharingTable.NAME, null, null);
+        try {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                UUID id = cursor.getSharedRoute().getmId();
+                events.add(getEvent(id));
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return events;
+    }
+
     File getPhotoFile(Event event, int idx) {
         File filesDir = mContext.getFilesDir();
         return new File(filesDir, event.getPhotoFilename(idx));
@@ -486,5 +515,13 @@ public class EventLab {
 
     void setTempEvent(Event tempEvent) {
         this.tempEvent = tempEvent;
+    }
+
+    public Event getSharingEvent() {
+        return sharingEvent;
+    }
+
+    public void setSharingEvent(Event sharingEvent) {
+        this.sharingEvent = sharingEvent;
     }
 }

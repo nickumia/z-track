@@ -4,9 +4,11 @@ import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.Elevation;
 import com.csc285.android.z_track.Statistics.LocationA;
 import com.csc285.android.z_track.Statistics.Pace;
+import com.csc285.android.z_track.Statistics.Rating;
 import com.csc285.android.z_track.Statistics.Statistics;
 import com.csc285.android.z_track.Statistics.Time;
 import com.csc285.android.z_track.Statistics.Velocity;
+import com.csc285.android.z_track.Statistics.Visit;
 import com.csc285.android.z_track.database.EventDbSchema;
 
 import java.util.ArrayList;
@@ -36,7 +38,10 @@ public class Event {
     private String acType = "misc";
     private int visited = 0;
     private int rating = 0;
+    private boolean scenic = false;
+    private boolean shareMarkers = false;
     private ArrayList<Statistics> mStats = new ArrayList<>();
+    private ArrayList<Statistics> mReview = new ArrayList<>();
     private ArrayList<String> markerPhotoFileNames = new ArrayList<>();
 
     static double slat, slon, elat, elon = -1;
@@ -85,6 +90,18 @@ public class Event {
         stat8.setId(R.string.activity_item_heading);
         stat8.setIdx(6);
 
+        Statistics stat12 = new Visit();
+        stat12.setId(R.string.visit_title);
+        stat12.setIdx(0);
+
+        Statistics stat13 = new Rating();
+        stat13.setId(R.string.rating_title);
+        stat13.setIdx(0);
+
+        Statistics stat14 = new Time();
+        stat14.setId(R.string.activity_item_times);
+        stat14.setIdx(0);
+
 //        Statistics stat10 = new LocationA();
 //        stat10.setId(R.string.activity_item_markers);
 //        stat10.setIdx(5);
@@ -104,6 +121,14 @@ public class Event {
 //        mStats.add(stat9);
 //        mStats.add(stat10);
 //        mStats.add(stat11);
+
+        mReview.add(stat7);
+        mReview.add(stat14);
+        mReview.add(stat12);
+        mReview.add(stat4);
+        mReview.add(stat1);
+        mReview.add(stat13);
+
     }
 
     public UUID getmId() {
@@ -138,6 +163,22 @@ public class Event {
         this.visited = visited;
     }
 
+    public boolean isScenic() {
+        return scenic;
+    }
+
+    public void setScenic(boolean scenic) {
+        this.scenic = scenic;
+    }
+
+    public boolean isShareMarkers() {
+        return shareMarkers;
+    }
+
+    public void setShareMarkers(boolean shareMarkers) {
+        this.shareMarkers = shareMarkers;
+    }
+
     public int getRating() {
         return rating;
     }
@@ -157,8 +198,21 @@ public class Event {
         return mStats;
     }
 
+    public ArrayList<Statistics> getmReview() {
+        return mReview;
+    }
+
     public Statistics getStat(Integer id) {
         for (Statistics stat : mStats) {
+            if (stat.getId().equals(id)) {
+                return stat;
+            }
+        }
+        return null;
+    }
+
+    public Statistics getReview(Integer id){
+        for (Statistics stat : mReview) {
             if (stat.getId().equals(id)) {
                 return stat;
             }
@@ -218,6 +272,41 @@ public class Event {
                 }
                 if (type.equals(EventDbSchema.EventTable.Cols.TIME_MS)){
                     ((Time) s).setOfficialTimeMS((int) stat);
+                }
+            }
+        }
+    }
+
+    public void setmReview(Object stat, int type) {
+        for (Statistics s : mReview){
+            if (s instanceof LocationA){
+                if (type == R.string.activity_item_location)
+                ((LocationA) s).setStart(((LocationA) stat).getStart());
+            }
+
+            if (s instanceof Distance){
+                if (type == R.string.activity_item_distance) {
+                    ((Distance) s).setTotalDistance(((Distance) stat).getTotalDistance());
+                }
+            }
+
+            if (s instanceof Time) {
+                if (type == R.string.activity_item_time || type == R.string.activity_item_times) {
+                    ((Time) s).setOfficialSTime(((Time) stat).getOfficialSTime());
+                    ((Time) s).setOfficialTime(((Time) stat).getOfficialTime());
+                    ((Time) s).setEndTime(((Time) stat).getEndTime());
+                }
+            }
+
+            if (s instanceof Rating) {
+                if (type == R.string.rating_title){
+                    ((Rating) s).setRating((float)(stat));
+                }
+            }
+
+            if (s instanceof Visit) {
+                if (type == R.string.visit_title){
+                    ((Visit) s).setVisited(((Visit) stat).getVisited());
                 }
             }
         }
