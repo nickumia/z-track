@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.csc285.android.z_track.Statistics.Distance;
@@ -62,13 +63,14 @@ public class HistoryFragment extends Fragment {
 
         private TextView mNameTextView;
         private Event mEvent;
+        private ImageView mTypeView;
 
         EventHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.list_history_item, parent, false));
 
             itemView.setOnClickListener(this);
             mNameTextView = (TextView) itemView.findViewById(R.id.event_title);
-
+            mTypeView = (ImageView) itemView.findViewById(R.id.activity_type);
 
         }
 
@@ -82,9 +84,18 @@ public class HistoryFragment extends Fragment {
         void bind(Event event) {
             mEvent = event;
             String datetime = event.getmDate().toString();
-            mNameTextView.setText(mEvent.getAcType().toUpperCase() +
-                    " on " + datetime.substring(0,10) +
+            mNameTextView.setText(
+                    //mEvent.getAcType().toUpperCase() + " on " +
+                    datetime.substring(0,10) +
                     " at " + datetime.substring(11,16));
+
+            if (mEvent.getAcType().equals("walk")) {
+                mTypeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_walk));
+            } else if (mEvent.getAcType().equals("bike")) {
+                mTypeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_bike));
+            } else {
+                mTypeView.setImageDrawable(getResources().getDrawable(R.drawable.ic_other));
+            }
         }
 
         @Override
