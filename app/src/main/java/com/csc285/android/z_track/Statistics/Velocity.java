@@ -1,6 +1,7 @@
 package com.csc285.android.z_track.Statistics;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Class to track velocity and heading
@@ -11,7 +12,6 @@ public class Velocity extends Statistics{
     private float topVelocity = 0;
     private float avgVelocity = 0;
     private ArrayList<Double> heading = new ArrayList<>();
-    private ArrayList<Float> velocities = new ArrayList<>();
     private ArrayList<Float> velocity = new ArrayList<>();
 
     public float getTopVelocity() {
@@ -38,6 +38,15 @@ public class Velocity extends Statistics{
         this.velocity.add(i, velocity);
     }
 
+    public void setVelocity(float vel)  {
+        this.velocity.add(vel);
+        this.topVelocity = Collections.max(this.velocity);
+    }
+
+    public void setVelocities(ArrayList<Float> velocity) {
+        this.velocity = velocity;
+    }
+
     public ArrayList<Double> getHeading() {
         return heading;
     }
@@ -48,6 +57,10 @@ public class Velocity extends Statistics{
         } else {
             return 0.0;
         }
+    }
+
+    public void setHeading(ArrayList<Double> h){
+        this.heading = h;
     }
 
     public void setHeading(double heading) {
