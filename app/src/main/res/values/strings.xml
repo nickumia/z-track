@@ -87,6 +87,7 @@
     <string name="search_dist_3">25</string>
     <string name="distance_title">Length</string>
     <string name="rating_title">Rating</string>
+    <string name="visit_title">Visits</string>
     <string name="dist_away_title">Distance</string>
 
     <string name="about1">The development team at Z-track is devoted to enabling it\'s users with the
