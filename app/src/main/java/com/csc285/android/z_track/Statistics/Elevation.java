@@ -1,5 +1,7 @@
 package com.csc285.android.z_track.Statistics;
 
+import com.csc285.android.z_track.MainActivity;
+
 import java.util.ArrayList;
 
 /**
@@ -16,8 +18,13 @@ public class Elevation extends Statistics {
     }
 
     public Double getLatestElevation() {
+
         if (elevation.size() > 0) {
-            return elevation.get(elevation.size() - 1);
+            if (MainActivity.UNIT.equals("SI")) {
+                return elevation.get(elevation.size() - 1);
+            } else {
+                return mToFt(elevation.get(elevation.size() - 1));
+            }
         } else {
             return 0.0;
         }
@@ -37,5 +44,9 @@ public class Elevation extends Statistics {
 
     public void setElevationRate(float elevationRate) {
         this.elevationRate = elevationRate;
+    }
+
+    public Double mToFt(Double in){
+        return in * 3.28084;
     }
 }
