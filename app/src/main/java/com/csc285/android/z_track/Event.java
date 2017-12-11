@@ -368,10 +368,14 @@ public class Event {
         for (Statistics s : mStats) {
             if (s instanceof Velocity) {
                 if (type == (R.string.activity_item_avgspeed)) {
-                    ((Velocity) s).setVelocities(((Velocity) stat).getVelocities().get(i),i);
+                    if (i < ((Velocity) stat).getVelocities().size()) {
+                        ((Velocity) s).setVelocities(((Velocity) stat).getVelocities().get(i), i);
+                    }
                 }
                 if (type == R.string.activity_item_heading) {
-                    ((Velocity) s).setHeading(((Velocity) stat).getHeading().get(i),i);
+                    if (i < ((Velocity) stat).getHeading().size()) {
+                        ((Velocity) s).setHeading(((Velocity) stat).getHeading().get(i), i);
+                    }
                 }
             }
 

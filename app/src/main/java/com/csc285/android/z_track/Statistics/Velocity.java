@@ -43,7 +43,11 @@ public class Velocity extends Statistics{
     }
 
     public void setVelocities(float velocity, int i) {
-        this.velocity.add(i, velocity);
+        try {
+            this.velocity.add(i, velocity);
+        } catch (IndexOutOfBoundsException ie){
+            this.velocity.add(velocity);
+        }
     }
 
     public void setVelocity(float vel)  {
@@ -76,7 +80,11 @@ public class Velocity extends Statistics{
     }
 
     public void setHeading(double heading, int i){
-        this.heading.add(i, heading);
+        try {
+            this.heading.add(i, heading);
+        } catch (IndexOutOfBoundsException ie) {
+            this.heading.add(heading);
+        }
     }
 
 }

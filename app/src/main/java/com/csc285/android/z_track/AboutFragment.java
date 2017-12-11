@@ -36,6 +36,7 @@ public class AboutFragment extends Fragment {
         mAppTextView = (TextView) v.findViewById(R.id.appName);
         mBuildTextView = (TextView) v.findViewById(R.id.buildTextView);
 
+        mAppTextView.setText("" + getString(R.string.app_name) + "1.0");
         mBuildTextView.setText("" + getString(R.string.app_build) + " "+ Build.VERSION.SDK_INT);
         return v;
     }

@@ -1,9 +1,7 @@
 package com.csc285.android.z_track;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
@@ -125,14 +123,16 @@ public class EventFragment extends Fragment implements
         mStatsRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mStatsRecyclerView.setNestedScrollingEnabled(false);
 
-        now = (Time)mEvent.getStat(R.string.activity_item_time);
-        mTracking = (LocationA)mEvent.getStat(R.string.activity_item_location);
-        mDistance = (Distance)mEvent.getStat(R.string.activity_item_distance);
-        mElevation = (Elevation)mEvent.getStat(R.string.activity_item_elevation);
-        mPace = (Pace)mEvent.getStat(R.string.activity_item_pace);
-        mVelocity = (Velocity)mEvent.getStat(R.string.activity_item_topspeed);
-        mVelocityAvg = (Velocity)mEvent.getStat(R.string.activity_item_avgspeed);
-        mHeading = (Velocity)mEvent.getStat(R.string.activity_item_heading);
+        if (mEvent != null) {
+            now = (Time) mEvent.getStat(R.string.activity_item_time);
+            mTracking = (LocationA) mEvent.getStat(R.string.activity_item_location);
+            mDistance = (Distance) mEvent.getStat(R.string.activity_item_distance);
+            mElevation = (Elevation) mEvent.getStat(R.string.activity_item_elevation);
+            mPace = (Pace) mEvent.getStat(R.string.activity_item_pace);
+            mVelocity = (Velocity) mEvent.getStat(R.string.activity_item_topspeed);
+            mVelocityAvg = (Velocity) mEvent.getStat(R.string.activity_item_avgspeed);
+            mHeading = (Velocity) mEvent.getStat(R.string.activity_item_heading);
+
 
 //        System.out.println(mTracking.getMarkers_photo().size());
 //        for (int i = 0; i < mTracking.getMarkers_photo().size(); i++) {
@@ -143,33 +143,34 @@ public class EventFragment extends Fragment implements
 //            System.out.println(mHeading.getHeading().get(i));
 //        }
 
-        if (mPostView != null){
-            mPostView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // Start PostFragment
+            if (mPostView != null) {
+                mPostView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        // Start PostFragment
 //                    Intent aIntent = new Intent(getActivity(), PostActivity.class);
 //                    startActivity(aIntent);
-                    FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
-                    fm.replace(R.id.fragment_container, PostFragment.newInstance(mEvent.getmId()));
-                    fm.addToBackStack(null).commit();
-                }
-            });
+                        FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
+                        fm.replace(R.id.fragment_container, PostFragment.newInstance(mEvent.getmId()));
+                        fm.addToBackStack(null).commit();
+                    }
+                });
+            }
+
+            eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
+
+            SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
+                    .findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+
+            updateUI();
+
+            mNSV.fullScroll(NestedScrollView.FOCUS_UP);
+            mNSV.scrollTo(0, mNSV.getTop());
+            mNSV.smoothScrollTo(0, 0);
+
+            drawPath();
         }
-
-        eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
-
-        SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
-        updateUI();
-
-        mNSV.fullScroll(NestedScrollView.FOCUS_UP);
-        mNSV.scrollTo(0,mNSV.getTop());
-        mNSV.smoothScrollTo(0,0);
-
-        drawPath();
 
         return v;
     }
@@ -340,9 +341,9 @@ public class EventFragment extends Fragment implements
     }
 
     public void returnResult() {
-        Intent id = getActivity().getIntent();
-        id.putExtra(ARG_EVENT_ID, mEvent.getmDate());
-        getActivity().setResult(Activity.RESULT_OK, id);
+//        Intent id = getActivity().getIntent();
+//        id.putExtra(ARG_EVENT_ID, mEvent.getmDate());
+//        getActivity().setResult(Activity.RESULT_OK, id);
     }
 
     private void updateEvent() {
@@ -409,19 +410,19 @@ public class EventFragment extends Fragment implements
     @Override
     public void onStart(){
         super.onStart();
-        returnResult();
+//        returnResult();
     }
 
     @Override
     public void onResume(){
         super.onResume();
-        returnResult();
+//        returnResult();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        EventLab.get(getActivity()).updateEvent(mEvent);
+        if (mEvent != null) EventLab.get(getActivity()).updateEvent(mEvent);
     }
 
 }

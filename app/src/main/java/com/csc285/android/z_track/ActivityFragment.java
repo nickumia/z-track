@@ -653,6 +653,7 @@ public class ActivityFragment extends Fragment implements
         }
 
         updateUI();
+        drawPath();
     }
 
     void updateTime(){
@@ -722,7 +723,7 @@ public class ActivityFragment extends Fragment implements
                 mVelocityAvg.calculateAvg();
 //            }
 //            if ((now.getCurrentTime()%1000 == 0)) {
-                drawPath();
+//                drawPath();
 //            }
             otherTasks.postDelayed(this, sensorUpdateFreq);
         }
@@ -911,19 +912,21 @@ public class ActivityFragment extends Fragment implements
     private void drawPath(){
 
         if (mMap != null) {
-//            mMap.clear();  //clears all Markers and Polylines
+            mMap.clear();  //clears all Markers and Polylines
 
+            for(int i = 0; i < IMPORTNAT_INDEX; i++) {
 //            mDistance.clear();
-            PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
-            if (mTracking.getPath().size() > 0) {
-                LatLng point = mTracking.getPath().get(IMPORTNAT_INDEX);
-                options.add(point);
-                if (IMPORTNAT_INDEX > 0) {
-                    mDistance.updateDistance(Math.abs(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(IMPORTNAT_INDEX - 1), point)));
+                PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+                if (mTracking.getPath().size() > 0) {
+                    LatLng point = mTracking.getPath().get(IMPORTNAT_INDEX);
+                    options.add(point);
+                    if (IMPORTNAT_INDEX > 0) {
+                        mDistance.updateDistance(Math.abs(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(IMPORTNAT_INDEX - 1), point)));
+                    }
                 }
-            }
 //            addMarkerImage(); //add Marker in current position
-            path = mMap.addPolyline(options); //add Polyline
+                path = mMap.addPolyline(options); //add Polyline
+            }
 
             ArrayList<Location> m = mTracking.getMarkers();
             ArrayList<String> ms = mTracking.getMarkerTitles();

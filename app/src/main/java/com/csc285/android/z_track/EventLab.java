@@ -424,8 +424,8 @@ public class EventLab {
         try {
             if (cursorElev.getCount() != 0) {
                 cursorElev.moveToFirst();
-                event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation, i);
-                i++;
+//                event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation, i);
+//                i++;
                 while (cursorVel.moveToNext()) {
                     event.setmStats(cursorElev.getElevation(), R.string.activity_item_elevation, i);
                     i++;
