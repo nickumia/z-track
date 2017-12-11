@@ -16,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.csc285.android.z_track.Statistics.Distance;
@@ -28,6 +29,7 @@ import com.csc285.android.z_track.Statistics.Velocity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -65,11 +67,12 @@ public class EventFragment extends Fragment implements
     Distance mDistance;
     Elevation mElevation;
     Pace mPace;
-    Velocity mVelocity, mVelocityAvg;
+    Velocity mVelocity, mVelocityAvg, mHeading;
     Polyline path;
 
     private RecyclerView mStatsRecyclerView;
     private StatsAdapter mAdapter;
+    private Button mHistoryView;
     boolean mBadStart;
 
     TextView eventNameTextView;
@@ -98,8 +101,6 @@ public class EventFragment extends Fragment implements
             System.out.println("WHATZ@DFSDF");
         }
 
-        System.out.println(((Time) mEvent.getmStats().get(0)).getOfficialSTime());
-
         setHasOptionsMenu(true);
     }
 
@@ -110,6 +111,7 @@ public class EventFragment extends Fragment implements
         View v;
         if (mBadStart) {
             v = inflater.inflate(R.layout.fragment_event_tainted, parent, false);
+            mHistoryView = (Button) v.findViewById(R.id.historyStart);
         } else {
             v = inflater.inflate(R.layout.fragment_event, parent, false);
         }
@@ -127,13 +129,30 @@ public class EventFragment extends Fragment implements
         mPace = (Pace)mEvent.getStat(R.string.activity_item_pace);
         mVelocity = (Velocity)mEvent.getStat(R.string.activity_item_topspeed);
         mVelocityAvg = (Velocity)mEvent.getStat(R.string.activity_item_avgspeed);
+        mHeading = (Velocity)mEvent.getStat(R.string.activity_item_heading);
+
+//        System.out.println(mTracking.getMarkers_photo().size());
+//        for (int i = 0; i < mTracking.getMarkers_photo().size(); i++) {
+//            System.out.println(mTracking.getMarkers_photo().get(i));
+//        }
+
+//        for (int i = 0; i< mHeading.getHeading().size(); i++){
+//            System.out.println(mHeading.getHeading().get(i));
+//        }
+
+        eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
+
+        SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         updateUI();
-        eventNameTextView.setText("" + "" + mEvent.getmDate().toString());
 
         mNSV.fullScroll(NestedScrollView.FOCUS_UP);
         mNSV.scrollTo(0,mNSV.getTop());
         mNSV.smoothScrollTo(0,0);
+
+        drawPath();
 
         return v;
     }
@@ -171,36 +190,44 @@ public class EventFragment extends Fragment implements
             mTitleTextView.setText(getResources().getString(stat.getId()));
             mUnitsTextView.setText(units[mStats.getIdx()]);
 
-            if (stat instanceof Time){
-                int time[] = now.getOfficialTime();
-                mDataTextView.setText(getString(R.string.time, time[0],
-                        String.format(Locale.getDefault(), "%02d", time[1]),
-                        String.format(Locale.getDefault(), "%03d", time[2])));
+            if (stat instanceof Time) {
+                mDataTextView.setText(getString(R.string.time, now.getOfficialTimeM(),
+                        String.format(Locale.getDefault(), "%02d", now.getOfficialTimeS()),
+                        String.format(Locale.getDefault(), "%03d", now.getOfficialTimeMS())));
             }
 
-            if (stat instanceof Pace){
+            if (stat instanceof Pace) {
                 mDataTextView.setText("" + "" + mPace.getPace());
             }
 
-            if (stat instanceof Velocity){
-                if (stat.getId() == R.string.activity_item_topspeed){
+            if (stat instanceof Velocity) {
+                if (stat.getId() == R.string.activity_item_topspeed) {
                     mDataTextView.setText("" + "" + mVelocity.getTopVelocity());
-                } else {
+                }
+                if (stat.getId() == R.string.activity_item_avgspeed) {
                     mDataTextView.setText("" + "" + mVelocityAvg.getAvgVelocity());
+                }
+                if (stat.getId() == R.string.activity_item_heading) {
+                    mDataTextView.setText("" + "" +
+                            String.format(Locale.getDefault(), "%01f", mHeading.getLatestHeading()));
                 }
             }
 
-            if (stat instanceof Distance){
-                mDataTextView.setText("" + "" + mDistance.getTotalDistance());
+            if (stat instanceof Distance) {
+                mDataTextView.setText("" + "" +
+                        String.format(Locale.getDefault(), "%01f", mDistance.getTotalDistance()));
             }
 
-            if (stat instanceof Elevation){
-                mDataTextView.setText("" + "" + mElevation.getElevation());
+            if (stat instanceof Elevation) {
+                mDataTextView.setText("" + "" + mElevation.getLatestElevation());
             }
 
-            if (stat instanceof LocationA){
-                mDataTextView.setText("" + mTracking.getCurrent().getLatitude() + "°, " +
-                        mTracking.getCurrent().getLongitude() + "°");
+            if (stat instanceof LocationA) {
+                if (stat.getId() == R.string.activity_item_location) {
+                    mDataTextView.setText("" +
+                            String.format(Locale.getDefault(), "%01f", mTracking.getStart().getLatitude()) + "°, " +
+                            String.format(Locale.getDefault(), "%01f", mTracking.getStart().getLongitude()) + "°");
+                }
             }
 
         }
@@ -250,13 +277,12 @@ public class EventFragment extends Fragment implements
         }
 
         updateEvent();
-        drawPath();
     }
 
     private void drawPath(){
 
         if (mMap != null) {
-            mMap.clear();  //clears all Markers and Polylines
+//            mMap.clear();  //clears all Markers and Polylines
 
             PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
             for (int i = 0; i < mTracking.getPath().size(); i++) {
@@ -270,7 +296,7 @@ public class EventFragment extends Fragment implements
             ArrayList<String> ms = mTracking.getMarkerTitles();
 //            ArrayList<String> mi = mEvent.getMarkers();
 
-            for (int i = 1; i < m.size(); i++) {
+            for (int i = 0; i < m.size(); i++) {
                 if (i < mEvent.getPhotoSize()) {
                     File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
                     showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
@@ -281,7 +307,7 @@ public class EventFragment extends Fragment implements
 
     public void showMarker(Double lat, Double lon, String title, File imageFile) {
         if (imageFile.exists()) {
-            mMap.clear();
+//            mMap.clear();
             // Create a LatLng object with the given Latitude and Longitude
             LatLng markerLoc = new LatLng(lat, lon);
 
@@ -320,6 +346,7 @@ public class EventFragment extends Fragment implements
                     LatLng(mTracking.getStart().getLatitude(),
                     mTracking.getStart().getLongitude()), 14.0f));
             updateUI();
+            drawPath();
         } catch (SecurityException xe) {
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
