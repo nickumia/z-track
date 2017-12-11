@@ -11,4 +11,7 @@
     <color name="colorLight">#faf6f1</color>
     <color name="colorMedium">#e4d5ba</color>
     <color name="colorDark">#ceb483</color>
+
+    <color name="colorGray">#adadad</color>
+    <color name="white">#ffffff</color>
 </resources>
