@@ -34,6 +34,8 @@ public class Event {
     private Date mDate;
     private long mTime;
     private String acType = "misc";
+    private int visited = 0;
+    private int rating = 0;
     private ArrayList<Statistics> mStats = new ArrayList<>();
     private ArrayList<String> markerPhotoFileNames = new ArrayList<>();
 
@@ -128,6 +130,21 @@ public class Event {
         this.mDate = mDate;
     }
 
+    public int getVisited() {
+        return visited;
+    }
+
+    public void setVisited(int visited) {
+        this.visited = visited;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
     public long getmTime() {
         return mTime;
     }
