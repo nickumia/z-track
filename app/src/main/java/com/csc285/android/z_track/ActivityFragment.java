@@ -75,6 +75,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import static android.content.Context.LOCATION_SERVICE;
+import static android.content.Context.SENSOR_SERVICE;
 
 /**
  * Created by nick on 11/16/2017.
@@ -112,14 +113,14 @@ public class ActivityFragment extends Fragment implements
 
     private SensorManager mSensorManager;
     private Event mEvent;
-    Handler timer;
+    Handler timer, otherTasks;
     Time now;
     LocationA mTracking;
     Distance mDistance;
     Elevation mElevation;
     Pace mPace;
     Velocity mVelocity, mVelocityAvg, mHeading;
-    RecordSensor accelR, compassR;
+    RecordSensor accelR;
     Sensor accel, compass;
     File mPhotoFile;
     Polyline path;
@@ -165,7 +166,6 @@ public class ActivityFragment extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         if (savedInstanceState != null) {
             active = savedInstanceState.getBoolean(SAVED_ACTIVE);
@@ -206,11 +206,12 @@ public class ActivityFragment extends Fragment implements
         mVelocityAvg = (Velocity)mEvent.getStat(R.string.activity_item_avgspeed);
         mHeading = (Velocity)mEvent.getStat(R.string.activity_item_heading);
 
-        mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (SensorManager) getActivity().getSystemService(SENSOR_SERVICE);
         accelR = new RecordSensor();
 
         registerSensors();
         timer = new Handler();
+        otherTasks = new Handler();
 
         locationManager = (LocationManager)getActivity().getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -340,7 +341,7 @@ public class ActivityFragment extends Fragment implements
                                     if (walk.isChecked()){
                                         state = "walk";
                                     } else if (bike.isChecked()){
-                                        state = "bike";
+                                        state = "ke";
                                     } else if (misc.isChecked()){
                                         state = "misc";
                                     }
@@ -427,6 +428,8 @@ public class ActivityFragment extends Fragment implements
                 mEvent.setmStats(now, R.string.activity_item_time);
                 mEvent.setmStats(mHeading, R.string.activity_item_heading);
 
+//                System.out.println(mTracking.getMarkers_photo());
+
                 EventLab.get(getActivity()).setTempEvent(null);
                 FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
                 fm.replace(R.id.fragment_container, EventFragment.newInstance(mEvent.getmId(), true));
@@ -498,40 +501,59 @@ public class ActivityFragment extends Fragment implements
             mTitleTextView.setText(getResources().getString(stat.getId()));
             mUnitsTextView.setText(units[mStats.getIdx()]);
 
-            if (stat instanceof Time){
+            if (stat instanceof Time) {
                 mDataTextView.setText(getString(R.string.time, now.getTimeMinutes(),
                         String.format(Locale.getDefault(), "%02d", now.getTimeSeconds()),
                         String.format(Locale.getDefault(), "%03d", now.getTimeMilli())));
             }
 
-            if (stat instanceof Pace){
+            if (stat instanceof Pace) {
                 mDataTextView.setText("" + "" + mPace.getPace());
             }
 
-            if (stat instanceof Velocity){
-                if (stat.getId() == R.string.activity_item_topspeed){
+            if (stat instanceof Velocity) {
+                if (stat.getId() == R.string.activity_item_topspeed) {
                     mDataTextView.setText("" + "" + mVelocity.getTopVelocity());
                 }
-                if (stat.getId() == R.string.activity_item_avgspeed){
+                if (stat.getId() == R.string.activity_item_avgspeed) {
                     mDataTextView.setText("" + "" + mVelocityAvg.getAvgVelocity());
                 }
-                if (stat.getId() == R.string.activity_item_heading){
+                if (stat.getId() == R.string.activity_item_heading) {
                     mDataTextView.setText("" + "" +
-                            String.format(Locale.getDefault(), "%02f", mHeading.getLatestHeading()));
+                            String.format(Locale.getDefault(), "%01f", mHeading.getLatestHeading()));
                 }
+//                if (stat.getId() == R.string.activity_item_speed){
+//                    mTitleTextView.setVisibility(View.GONE);
+//                    mUnitsTextView.setVisibility(View.GONE);
+//                    mDataTextView.setVisibility(View.GONE);
+//                }
             }
 
-            if (stat instanceof Distance){
-                mDataTextView.setText("" + "" + mDistance.getTotalDistance());
+            if (stat instanceof Distance) {
+                mDataTextView.setText("" + "" +
+                        String.format(Locale.getDefault(), "%01f", mDistance.getTotalDistance()));
             }
 
-            if (stat instanceof Elevation){
+            if (stat instanceof Elevation) {
                 mDataTextView.setText("" + "" + mElevation.getLatestElevation());
             }
 
-            if (stat instanceof LocationA){
-                mDataTextView.setText("" + mTracking.getCurrent().getLatitude() + "°, " +
-                        mTracking.getCurrent().getLongitude() + "°");
+            if (stat instanceof LocationA) {
+                if (stat.getId() == R.string.activity_item_location) {
+                    mDataTextView.setText("" +
+                            String.format(Locale.getDefault(), "%01f", mTracking.getCurrent().getLatitude()) + "°, " +
+                            String.format(Locale.getDefault(), "%01f", mTracking.getCurrent().getLongitude()) + "°");
+                }
+//                if (stat.getId() == R.string.activity_item_markers){
+//                    mTitleTextView.setVisibility(View.GONE);
+//                    mUnitsTextView.setVisibility(View.GONE);
+//                    mDataTextView.setVisibility(View.GONE);
+//                }
+//                if (stat.getId() == R.string.activity_item_path){
+//                    mTitleTextView.setVisibility(View.GONE);
+//                    mUnitsTextView.setVisibility(View.GONE);
+//                    mDataTextView.setVisibility(View.GONE);
+//                }
             }
 
         }
@@ -585,7 +607,7 @@ public class ActivityFragment extends Fragment implements
         }
 
         updateEvent();
-//        drawPath();
+        drawPath();
     }
 
     void updateUX(){
@@ -665,10 +687,24 @@ public class ActivityFragment extends Fragment implements
             Time now = (Time)mEvent.getStat(R.string.activity_item_time);
             now.updateTime();
             timer.postDelayed(this, 0);
-            if (started && (now.getCurrentTime()%1000 == 0)){
+            otherTasks.postDelayed(importantRunnable, 0);
+            updateUI();
+        }
+
+    };
+
+    public Runnable importantRunnable = new Runnable() {
+
+        public void run() {
+            if (started && (now.getCurrentTime()%100 == 0)){
                 getGPSLocation();
             }
-            updateUI();
+            if (started && (now.getCurrentTime()%100 == 0)){
+                getElevation();
+            }
+            if (started && (now.getCurrentTime()%500 == 0)){
+                mVelocityAvg.calculateAvg();
+            }
         }
 
     };
@@ -746,9 +782,9 @@ public class ActivityFragment extends Fragment implements
 
         String title = marker.getTitle();
         ArrayList<String> ms = mTracking.getMarkerTitles();
-        int idx = 1;
+        int idx = 0;
 
-        for (int i = 1; i < ms.size(); i++){
+        for (int i = 0; i < ms.size(); i++){
             if (ms.get(i).equals(title)){
                 idx = i;
                 break;
@@ -826,7 +862,7 @@ public class ActivityFragment extends Fragment implements
     // https://developers.google.com/maps/documentation/android-api/marker
     public void showMarker(Double lat, Double lon, String title, File imageFile) {
         if (imageFile.exists()) {
-            mMap.clear();
+//            mMap.clear();
             // Create a LatLng object with the given Latitude and Longitude
             LatLng markerLoc = new LatLng(lat, lon);
 
@@ -863,7 +899,7 @@ public class ActivityFragment extends Fragment implements
                 LatLng point = mTracking.getPath().get(i);
                 options.add(point);
                 if (i > 0) {
-                    mDistance.updateDistance(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(i-1), point));
+                    mDistance.updateDistance(Math.abs(mDistance.getDistanceFromLatLonInKm(mTracking.getPath().get(i-1), point)));
                 }
             }
 //            addMarkerImage(); //add Marker in current position
@@ -902,9 +938,23 @@ public class ActivityFragment extends Fragment implements
             if (mTracking != null){
                 mTracking.addToPath(latLng);
                 mElevation.setElevation(mTracking.getCurrent().getAltitude());
-                drawPath();
+                mVelocity.setVelocity(mTracking.getCurrent().getSpeed());
+                mVelocityAvg.setVelocities(mVelocity.getVelocities());
+//                System.out.println(mElevation.getLatestElevation());
             }
             Log.i(TAG, "Called GPS Location");
+        } catch (SecurityException xe){
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+        }
+    }
+
+    public void getElevation(){
+        try {
+            mTracking.setCurrent(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+            if (mTracking != null){
+                mElevation.setElevation(mTracking.getCurrent().getAltitude());
+            }
+            Log.i(TAG, "Called Elevation");
         } catch (SecurityException xe){
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
@@ -964,57 +1014,17 @@ public class ActivityFragment extends Fragment implements
         if (mTracking != null){
             mTracking.addToPath(latLng);
         }
-
-//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-//
-//        try {
-//            addresses = geocoder.getFromLocation(latitude, longitude, 1);
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        String cityName = addresses.get(0).getAddressLine(0);
-//        String stateName = addresses.get(0).getAddressLine(1);
-//        String countryName = addresses.get(0).getAddressLine(2);
-//
-//        String[] splittedStateName = stateName.split(",");
-//        requiredArea = splittedStateName[2];
-//        Log.d("iFocus", "The value of required area is " + requiredArea);
-//
-//        city = addresses.get(0).getLocality();
-//        area = addresses.get(0).getSubLocality();
-//        String adminArea = addresses.get(0).getAdminArea();
-//        String premises = addresses.get(0).getPremises();
-//        String subAdminArea = addresses.get(0).getSubAdminArea();
-//        String featureName = addresses.get(0).getFeatureName();
-//        String phone = addresses.get(0).getPhone();
-//        country = addresses.get(0).getCountryName();
-//
-//        SharedPreferences sharedPreferences = getSharedPreferences("MyValues", MODE_PRIVATE);
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
-//        editor.putString("CITY", cityName);
-//        editor.putString("STATE", stateName);
-//        editor.putString("COUNTRY", countryName);
-//        editor.commit();
-//
-//        TextView mapTitle = (TextView) findViewById(R.id.textViewTitle);
-//
-//        if (requiredArea != "" && city != "" && country != "") {
-//            title = mLastUpdateTime.concat(", " + requiredArea).concat(", " + city).concat(", " + country);
-//        }
-//        else {
-//            title = mLastUpdateTime.concat(", " + area).concat(", " + city).concat(", " + country);
-//        }
-//        mapTitle.setText(title);
-
-//        drawPath();// newly added
+        drawPath();
     }
 
 
     void registerSensors() {
-        mSensorManager.registerListener(this,
-                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                SensorManager.SENSOR_DELAY_NORMAL);
+        // Sensor Code abstracted from:
+        // http://www.vogella.com/tutorials/AndroidSensor/article.html
+
+//        mSensorManager.registerListener(this,
+//                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+//                SensorManager.SENSOR_DELAY_NORMAL);
 
 //        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
         compass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
@@ -1078,8 +1088,8 @@ public class ActivityFragment extends Fragment implements
                 return;
             }
             accelR.setLastUpdate(actualTime);
-//            Log.d(TAG, Float.toString(accelerationSquareRoot));
-//            Log.d(TAG, Long.toString(actualTime));
+            Log.d(TAG, Float.toString(accelerationSquareRoot));
+            Log.d(TAG, Long.toString(actualTime));
         }
     }
 
@@ -1099,14 +1109,21 @@ public class ActivityFragment extends Fragment implements
             startLocationUpdates();
             Log.d(TAG, "Location update resumed .....................");
         }
-//        mSensorManager.registerListener(this, Sensor.TYPE_ACCELEROMETER,
-//                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+
+        if (started) {
+            timer.postDelayed(runnable, 0);
+            otherTasks.postDelayed(importantRunnable, 0);
+        }
+
+        mSensorManager.registerListener(this,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_NORMAL);
 //        sm.registerListener(this, Sensor.TYPE_MAGNETIC_FIELD,
 //                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
 //        if (mRequestingLocationUpdates) {
 //            startLocationUpdates();
 //        }
-
+//
 //        mSensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -1115,6 +1132,8 @@ public class ActivityFragment extends Fragment implements
         super.onPause();
         EventLab.get(getActivity()).setTempEvent(mEvent);
 
+//        timer.removeCallbacks(runnable);
+        otherTasks.removeCallbacks(importantRunnable);
         updateEvent();
         mSensorManager.unregisterListener(this);
         if (mClient != null){
@@ -1145,6 +1164,7 @@ public class ActivityFragment extends Fragment implements
 
         if (compass != null) {
             mSensorManager.unregisterListener(compassEventListener);
+//            mSensorManager.unregisterListener(accel);
         }
     }
 
