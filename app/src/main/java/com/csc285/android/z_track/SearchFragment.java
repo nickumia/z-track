@@ -22,6 +22,7 @@ import com.csc285.android.z_track.Statistics.Distance;
 import com.csc285.android.z_track.Statistics.LocationA;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -46,6 +47,7 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
     private Location currentLocation;
 
     private List<Event> shared;
+    private ArrayList<Double> distances;
 
     private static final String[] LOCATION_PERMISSIONS = new String[]{
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -213,7 +215,7 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
          * https://developer.android.com/guide/topics/resources/string-resource.html#StringArray
          *
          */
-        void bind(Event event) {
+        void bind(Event event, double di) {
             mEvent = event;
 
             if (MainActivity.UNIT.equals("SI")) {
@@ -221,12 +223,19 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
                         String.format(Locale.getDefault(), "%.4f",
                                 ((Distance) mEvent.getStat(R.string.activity_item_distance)).getTotalDistance())
                 + " km");
+
+                mDistanceTextView.setText("" +
+                        String.format(Locale.getDefault(), "%.2f",di) + " km");
             } else {
                 mLengthTextView.setText("" + "" +
                         String.format(Locale.getDefault(), "%.4f",
                             ((Distance) mEvent.getStat(R.string.activity_item_distance))
                                 .kmToMi(((Distance) mEvent.getStat(R.string.activity_item_distance))
                                 .getTotalDistance()))
+                        + " mi");
+                mDistanceTextView.setText("" +
+                        String.format(Locale.getDefault(), "%.2f",
+                        ((Distance) mEvent.getStat(R.string.activity_item_distance)).kmToMi(di))
                         + " mi");
             }
 
@@ -274,7 +283,8 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
         @Override
         public void onBindViewHolder(SearchHolder holder, int position) {
             Event stat = mEvent.get(position);
-            holder.bind(stat);
+            Double di = distances.get(position);
+            holder.bind(stat, di);
         }
 
         @Override
@@ -308,6 +318,7 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
 
     void findLocationRoutes(int i){
         shared = EventLab.get(getActivity()).getSharedRoutes();
+        distances = new ArrayList<>();
 
         Distance d = new Distance();
         LatLng a,b;
@@ -318,6 +329,8 @@ public class SearchFragment extends Fragment implements com.google.android.gms.l
             b = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
             if (d.getDistanceFromLatLonInKm(a,b) > d.kmToMi(25)){
                 shared.remove(e);
+            } else {
+                distances.add(d.getDistanceFromLatLonInKm(a,b));
             }
         }
 
