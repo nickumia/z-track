@@ -15,6 +15,7 @@
     <string name="action_settings">Settings</string>
     <string name="action_choose">Choose a type of Activity</string>
     <string name="title_activity_maps">Map</string>
+    <string name="action_post">Post Route</string>
 
     <string name="show_large_picture_title">New Marker!</string>
     <string name="choose_activity">Choose Activity Type:</string>
@@ -30,7 +31,7 @@
     <string name="stats_title">Metric</string>
     <string name="stats_data">Data</string>
     <string name="stats_units">Units</string>
-    
+
     <string name="activity_item_time">Time</string>
     <string name="activity_item_pace">Pace</string>
     <string name="activity_item_topspeed">Top Speed</string>
@@ -39,8 +40,13 @@
     <string name="activity_item_elevation">Elevation</string>
     <string name="activity_item_distance">Distance</string>
     <string name="activity_item_location">Location</string>
+    <string name="activity_item_heading">Heading</string>
     <string name="activity_item_markers">Markers</string>
     <string name="activity_item_path">Path</string>
+    <string name="lifetimeTitle">Lifetime</string>
+    <string name="lifetimeStatsEN">%1$s hrs\n%2$s mi\n%3$s Activities</string>
+    <string name="lifetimeStatsSI">%1$s hrs\n%2$s km\n%3$s Activities</string>
+    <string name="deleteEvent">Swipe to Delete.</string>
 
     <string name="error_location">Location not found. Please Try Again.</string>
 
@@ -48,8 +54,9 @@
         <item>MM:SS:mmm</item>
         <item>km</item>
         <item>km/hr</item>
-        <item>km/min</item>
+        <item>min/km</item>
         <item>m</item>
+        <item>°</item>
         <item>°</item>
     </string-array>
 
@@ -57,12 +64,21 @@
         <item>MM:SS:mmm</item>
         <item>mi</item>
         <item>mph</item>
-        <item>mi/min</item>
+        <item>min/mi</item>
         <item>ft</item>
+        <item>°</item>
         <item>°</item>
     </string-array>
 
     <string name="time">%1$d:%2$s:%3$s</string>
+
+    <string name="post1">Thanks for sharing!  We just need a few more pieces of information..</string>
+    <string name="post1a">Scenic</string>
+    <string name="post1b">Challenge</string>
+    <string name="post2">Difficulty</string>
+    <string name="post2b">Beauty</string>
+    <string name="post3">Share Picture (markers)</string>
+    <string name="post4">Review</string>
 
     <string name="about1">The development team at Z-track is devoted to enabling it\'s users with the
         power to accurately and effectively record relevant trip information.</string>
