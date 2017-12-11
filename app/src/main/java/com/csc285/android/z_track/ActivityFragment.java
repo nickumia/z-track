@@ -654,6 +654,7 @@ public class ActivityFragment extends Fragment implements
             now.setStartTime();
 //            if(mClient.isConnected()) getLocation();
             timer.postDelayed(runnable, 10);
+            otherTasks.postDelayed(importantRunnable,10);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
@@ -661,12 +662,14 @@ public class ActivityFragment extends Fragment implements
             if (!rotated) now.addDeltaTime();
             now.setStartTime();
             timer.postDelayed(runnable, 10);
+            otherTasks.postDelayed(importantRunnable,10);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
         if ( !active & !save && started){
             now.setEndTime();
             timer.removeCallbacks(runnable);
+            otherTasks.removeCallbacks(importantRunnable);
         }
 
         if ( !active & save && started){
@@ -674,6 +677,7 @@ public class ActivityFragment extends Fragment implements
             now.setOfficialTime();
             now.setEndTime();
             timer.removeCallbacks(runnable);
+            otherTasks.removeCallbacks(importantRunnable);
             now.resetDeltaTime();
 //            now.setTimeSeconds(0);
 //            now.setTimeMinutes(0);
@@ -704,7 +708,7 @@ public class ActivityFragment extends Fragment implements
     public Runnable importantRunnable = new Runnable() {
 
         public void run() {
-            if (started && (now.getCurrentTime()%100 == 0)){
+            if (started && (now.getCurrentTime()%10 == 0)){
                 getGPSLocation();
                 getElevation();
             }
@@ -901,7 +905,7 @@ public class ActivityFragment extends Fragment implements
         if (mMap != null) {
 //            mMap.clear();  //clears all Markers and Polylines
 
-            mDistance.clear();
+//            mDistance.clear();
             PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
             for (int i = 0; i < mTracking.getPath().size(); i++) {
                 LatLng point = mTracking.getPath().get(i);
