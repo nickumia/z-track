@@ -83,7 +83,6 @@ import static android.content.Context.SENSOR_SERVICE;
  */
 
 public class ActivityFragment extends Fragment implements
-        SensorEventListener,
         OnMapReadyCallback,
         com.google.android.gms.location.LocationListener,
         GoogleMap.OnMarkerClickListener,
@@ -102,6 +101,7 @@ public class ActivityFragment extends Fragment implements
     private static final String SAVED_RESUMED = "resumed";
     private static final String SAVED_SAVE = "save";
     private static final String SAVED_TIME = "time";
+    private static final String SAVED_ROTATE = "rotated";
     private static final String SAVED_STATE= "state";
     FloatingActionButton mStartActivity;
     FloatingActionButton mPauseActivity;
@@ -139,6 +139,7 @@ public class ActivityFragment extends Fragment implements
     boolean active = false;
     boolean save = false;
     boolean resumed = false;
+    boolean rotated = false;
     String state = "misc";
     int marker_photo_idx = 0;
 
@@ -172,6 +173,7 @@ public class ActivityFragment extends Fragment implements
             started = savedInstanceState.getBoolean(SAVED_STARTED);
             save = savedInstanceState.getBoolean(SAVED_SAVE);
             resumed = savedInstanceState.getBoolean(SAVED_RESUMED);
+            rotated = savedInstanceState.getBoolean(SAVED_ROTATE);
             state = savedInstanceState.getString(SAVED_STATE);
         }
 
@@ -194,6 +196,7 @@ public class ActivityFragment extends Fragment implements
         save = mPrefs.getBoolean(SAVED_SAVE, false);
         started = mPrefs.getBoolean(SAVED_STARTED, false);
         resumed = mPrefs.getBoolean(SAVED_RESUMED, false);
+        rotated = mPrefs.getBoolean(SAVED_ROTATE, false);
         state = mPrefs.getString(SAVED_STATE, "misc");
 
         mEvent.setAcType(state);
@@ -209,7 +212,7 @@ public class ActivityFragment extends Fragment implements
         mSensorManager = (SensorManager) getActivity().getSystemService(SENSOR_SERVICE);
         accelR = new RecordSensor();
 
-        registerSensors();
+//        registerSensors();
         timer = new Handler();
         otherTasks = new Handler();
 
@@ -218,23 +221,23 @@ public class ActivityFragment extends Fragment implements
             @Override
             public void onLocationChanged(Location location) {
                 mTracking.setCurrent(location);
-                Log.v(TAG, "IN ON LOCATION CHANGE");
+//                Log.v(TAG, "IN ON LOCATION CHANGE");
                 locationManager.removeUpdates(this);
             }
 
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
-                Log.v(TAG, "Status changed: " + s);
+//                Log.v(TAG, "Status changed: " + s);
             }
 
             @Override
             public void onProviderEnabled(String s) {
-                Log.i(TAG, "PROVIDER ENABLED: " + s);
+//                Log.i(TAG, "PROVIDER ENABLED: " + s);
             }
 
             @Override
             public void onProviderDisabled(String s) {
-                Log.e(TAG, "PROVIDER DISABLED: " + s);
+//                Log.e(TAG, "PROVIDER DISABLED: " + s);
             }
         };
 
@@ -285,6 +288,7 @@ public class ActivityFragment extends Fragment implements
         outState.putBoolean(SAVED_ACTIVE, active);
         outState.putString(SAVED_TIME, now.getQTime());
         outState.putBoolean(SAVED_RESUMED, resumed);
+        outState.putBoolean(SAVED_ROTATE, rotated);
     }
 
     @Override
@@ -518,9 +522,10 @@ public class ActivityFragment extends Fragment implements
                 if (stat.getId() == R.string.activity_item_avgspeed) {
                     mDataTextView.setText("" + "" + mVelocityAvg.getAvgVelocity());
                 }
+                // 0=North, 90=East, 180=South, 270=West
                 if (stat.getId() == R.string.activity_item_heading) {
                     mDataTextView.setText("" + "" +
-                            String.format(Locale.getDefault(), "%01f", mHeading.getLatestHeading()));
+                            String.format(Locale.getDefault(), "%.1f", mHeading.getLatestHeading()));
                 }
 //                if (stat.getId() == R.string.activity_item_speed){
 //                    mTitleTextView.setVisibility(View.GONE);
@@ -531,7 +536,7 @@ public class ActivityFragment extends Fragment implements
 
             if (stat instanceof Distance) {
                 mDataTextView.setText("" + "" +
-                        String.format(Locale.getDefault(), "%01f", mDistance.getTotalDistance()));
+                        String.format(Locale.getDefault(), "%.4f", mDistance.getTotalDistance()));
             }
 
             if (stat instanceof Elevation) {
@@ -541,8 +546,8 @@ public class ActivityFragment extends Fragment implements
             if (stat instanceof LocationA) {
                 if (stat.getId() == R.string.activity_item_location) {
                     mDataTextView.setText("" +
-                            String.format(Locale.getDefault(), "%01f", mTracking.getCurrent().getLatitude()) + "°, " +
-                            String.format(Locale.getDefault(), "%01f", mTracking.getCurrent().getLongitude()) + "°");
+                            String.format(Locale.getDefault(), "%.2f", mTracking.getCurrent().getLatitude()) + "°, " +
+                            String.format(Locale.getDefault(), "%.2f", mTracking.getCurrent().getLongitude()) + "°");
                 }
 //                if (stat.getId() == R.string.activity_item_markers){
 //                    mTitleTextView.setVisibility(View.GONE);
@@ -602,18 +607,20 @@ public class ActivityFragment extends Fragment implements
             mAdapter = new StatsAdapter(stats);
             mStatsRecyclerView.setAdapter(mAdapter);
         } else {
+            mStatsRecyclerView.setAdapter(mAdapter);
             mAdapter.setmStats(stats);
             mAdapter.notifyDataSetChanged();
         }
 
         updateEvent();
-        drawPath();
+//        drawPath();
     }
 
     void updateUX(){
         getActivity().invalidateOptionsMenu();
 
         if(!started){
+            unregisterSensors();
             mStartActivity.setVisibility(View.VISIBLE);
             mResumeActivity.setVisibility(View.GONE);
             mPauseActivity.setVisibility(View.GONE);
@@ -621,6 +628,7 @@ public class ActivityFragment extends Fragment implements
 
         } else {
             if (active & !save) {
+                registerSensors();
                 mStartActivity.setVisibility(View.GONE);
                 mResumeActivity.setVisibility(View.GONE);
                 mPauseActivity.setVisibility(View.VISIBLE);
@@ -628,6 +636,7 @@ public class ActivityFragment extends Fragment implements
             }
 
             if (!active & !save) {
+                unregisterSensors();
                 mStartActivity.setVisibility(View.GONE);
                 mPauseActivity.setVisibility(View.GONE);
                 mResumeActivity.setVisibility(View.VISIBLE);
@@ -644,14 +653,14 @@ public class ActivityFragment extends Fragment implements
         if( active && !save && started && !resumed){
             now.setStartTime();
 //            if(mClient.isConnected()) getLocation();
-            timer.postDelayed(runnable, 0);
+            timer.postDelayed(runnable, 10);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
         if( active && !save && started && resumed){
-            now.addDeltaTime();
+            if (!rotated) now.addDeltaTime();
             now.setStartTime();
-            timer.postDelayed(runnable, 0);
+            timer.postDelayed(runnable, 10);
             accelR.setLastUpdate(now.getCurrentTime());
         }
 
@@ -686,8 +695,7 @@ public class ActivityFragment extends Fragment implements
         public void run() {
             Time now = (Time)mEvent.getStat(R.string.activity_item_time);
             now.updateTime();
-            timer.postDelayed(this, 0);
-            otherTasks.postDelayed(importantRunnable, 0);
+            timer.postDelayed(this, 10);
             updateUI();
         }
 
@@ -698,13 +706,13 @@ public class ActivityFragment extends Fragment implements
         public void run() {
             if (started && (now.getCurrentTime()%100 == 0)){
                 getGPSLocation();
-            }
-            if (started && (now.getCurrentTime()%100 == 0)){
                 getElevation();
             }
             if (started && (now.getCurrentTime()%500 == 0)){
                 mVelocityAvg.calculateAvg();
             }
+            otherTasks.postDelayed(this, 10);
+            drawPath();
         }
 
     };
@@ -942,7 +950,7 @@ public class ActivityFragment extends Fragment implements
                 mVelocityAvg.setVelocities(mVelocity.getVelocities());
 //                System.out.println(mElevation.getLatestElevation());
             }
-            Log.i(TAG, "Called GPS Location");
+//            Log.i(TAG, "Called GPS Location");
         } catch (SecurityException xe){
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
@@ -954,7 +962,7 @@ public class ActivityFragment extends Fragment implements
             if (mTracking != null){
                 mElevation.setElevation(mTracking.getCurrent().getAltitude());
             }
-            Log.i(TAG, "Called Elevation");
+//            Log.i(TAG, "Called Elevation");
         } catch (SecurityException xe){
             requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
         }
@@ -1005,7 +1013,7 @@ public class ActivityFragment extends Fragment implements
         mTracking.setCurrent(location);
         mLastUpdateTime = now.getCurrentTime();
         float accuracy = location.getAccuracy();
-        Log.d("iFocus", "The amount of accuracy is " + accuracy);
+//        Log.d("iFocus", "The amount of accuracy is " + accuracy);
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
 
@@ -1014,7 +1022,7 @@ public class ActivityFragment extends Fragment implements
         if (mTracking != null){
             mTracking.addToPath(latLng);
         }
-        drawPath();
+//        drawPath();
     }
 
 
@@ -1027,7 +1035,7 @@ public class ActivityFragment extends Fragment implements
 //                SensorManager.SENSOR_DELAY_NORMAL);
 
 //        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
+        compass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (compass != null) {
             mSensorManager.registerListener(compassEventListener, compass,
                     SensorManager.SENSOR_DELAY_NORMAL);
@@ -1037,6 +1045,12 @@ public class ActivityFragment extends Fragment implements
                     Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    void unregisterSensors(){
+        if (compass != null) {
+            mSensorManager.unregisterListener(compassEventListener);
+        }
     }
 
     private SensorEventListener compassEventListener = new SensorEventListener() {
@@ -1050,27 +1064,31 @@ public class ActivityFragment extends Fragment implements
             // angle between the magnetic north direction
             // 0=North, 90=East, 180=South, 270=West
             float azimuth = event.values[0];
-            mHeading.setHeading(azimuth);
+//            float azimuth1 = event.values[1];
+//            float azimuth2 = event.values[2];
+            mHeading.setHeading(azimuth*6);
 //            Log.d(TAG, Float.toString(azimuth));
+//            Log.d(TAG, Float.toString(azimuth1));
+//            Log.d(TAG, Float.toString(azimuth2));
 //            compassView.updateData(azimuth);
         }
     };
 
-    @Override
-    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
-    }
-
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-        // The light sensor returns a single value.
-        // Many sensors return 3 values, one for each axis.
-        // Do something with this sensor value.
-
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            getAccelerometer(event);
-        }
-    }
+//    @Override
+//    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
+//        // Do something here if sensor accuracy changes.
+//    }
+//
+//    @Override
+//    public final void onSensorChanged(SensorEvent event) {
+//        // The light sensor returns a single value.
+//        // Many sensors return 3 values, one for each axis.
+//        // Do something with this sensor value.
+//
+//        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+//            getAccelerometer(event);
+//        }
+//    }
 
     private void getAccelerometer(SensorEvent event) {
         float[] values = event.values;
@@ -1088,8 +1106,8 @@ public class ActivityFragment extends Fragment implements
                 return;
             }
             accelR.setLastUpdate(actualTime);
-            Log.d(TAG, Float.toString(accelerationSquareRoot));
-            Log.d(TAG, Long.toString(actualTime));
+//            Log.d(TAG, Float.toString(accelerationSquareRoot));
+//            Log.d(TAG, Long.toString(actualTime));
         }
     }
 
@@ -1111,13 +1129,14 @@ public class ActivityFragment extends Fragment implements
         }
 
         if (started) {
-            timer.postDelayed(runnable, 0);
-            otherTasks.postDelayed(importantRunnable, 0);
+//            timer.postDelayed(runnable, 0);
+            if (active) registerSensors();
+            otherTasks.postDelayed(importantRunnable, 10);
         }
 
-        mSensorManager.registerListener(this,
-                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                SensorManager.SENSOR_DELAY_NORMAL);
+//        mSensorManager.registerListener(this,
+//                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+//                SensorManager.SENSOR_DELAY_NORMAL);
 //        sm.registerListener(this, Sensor.TYPE_MAGNETIC_FIELD,
 //                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
 //        if (mRequestingLocationUpdates) {
@@ -1131,11 +1150,12 @@ public class ActivityFragment extends Fragment implements
     public void onPause() {
         super.onPause();
         EventLab.get(getActivity()).setTempEvent(mEvent);
+        unregisterSensors();
 
 //        timer.removeCallbacks(runnable);
         otherTasks.removeCallbacks(importantRunnable);
         updateEvent();
-        mSensorManager.unregisterListener(this);
+//        mSensorManager.unregisterListener(this);
         if (mClient != null){
             if (mClient.isConnected()){
                 stopLocationUpdates();
@@ -1148,6 +1168,7 @@ public class ActivityFragment extends Fragment implements
         ed.putBoolean(SAVED_STARTED, started);
         ed.putBoolean(SAVED_RESUMED, resumed);
         ed.putString(SAVED_STATE, state);
+        ed.putBoolean(SAVED_ROTATE, rotated);
         ed.commit();
     }
 
@@ -1161,11 +1182,6 @@ public class ActivityFragment extends Fragment implements
     public void onDestroy() {
         super.onDestroy();
         EventLab.get(getActivity()).setTempEvent(mEvent);
-
-        if (compass != null) {
-            mSensorManager.unregisterListener(compassEventListener);
-//            mSensorManager.unregisterListener(accel);
-        }
     }
 
     @Override
