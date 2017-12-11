@@ -151,7 +151,7 @@ public class EventFragment extends Fragment implements
 //                    Intent aIntent = new Intent(getActivity(), PostActivity.class);
 //                    startActivity(aIntent);
                     FragmentTransaction fm = getActivity().getSupportFragmentManager().beginTransaction();
-                    fm.replace(R.id.fragment_container, PostFragment.newInstance());
+                    fm.replace(R.id.fragment_container, PostFragment.newInstance(mEvent.getmId()));
                     fm.addToBackStack(null).commit();
                 }
             });
