@@ -1,9 +1,11 @@
 *Z-Track*
 ======
 **Z-Track** is an app designed to ... 
-(1) Track and review your regimens to improve your workout and overall fitness.  
-(2) Learn about new trails and compete with others for best time, longest sustained speed or another goal.  Leave your own codename for others to challenge.
-(3) Search up your area to see what routes are popular around you
+	(1) Track and review your regimens to improve your workout and overall fitness.  
+	
+	(2) Learn about new trails and compete with others for best time, longest sustained speed or another goal.  Leave your own codename for others to challenge.
+	
+	(3) Search up your area to see what routes are popular around you
 
 #### Screenshots
 [![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185723.png )]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185723.png )
@@ -41,34 +43,34 @@
 
 #### Code
 * Algorithm to calculate distance between two Locations (Latitude, Longitude)
-** https://www.movable-type.co.uk/scripts/latlong.html
+	** https://www.movable-type.co.uk/scripts/latlong.html
 
 * Code to impletement sensors
-** http://www.vogella.com/tutorials/AndroidSensor/article.html
+	** http://www.vogella.com/tutorials/AndroidSensor/article.html
 
 * Draw a path on a Google Map (Mesh of..)
-** https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/
-https://stackoverflow.com/questions/30249920/how-to-draw-path-as-i-move-starting-from-my-current-location-using-google-maps
+	** https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/
+	** https://stackoverflow.com/questions/30249920/how-to-draw-path-as-i-move-starting-from-my-current-location-using-google-maps
 
 * Implementing SharedPreferences
-** https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
+	** https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
 
 * Creating a Stopwatch
-** https://www.android-examples.com/android-create-stopwatch-example-tutorial-in-android-studio/
+	** https://www.android-examples.com/android-create-stopwatch-example-tutorial-in-android-studio/
 
 * Controlling Markers on Google Maps
-** https://developers.google.com/maps/documentation/android-api/marker
+	** https://developers.google.com/maps/documentation/android-api/marker
 
 * Update SQLite DB based on two columns
-** https://stackoverflow.com/questions/32152966/update-sqlite-with-multiple-column-values
+	** https://stackoverflow.com/questions/32152966/update-sqlite-with-multiple-column-values
 
 * Some Code Partially Adapted from
-** Android Programming - The Big Nerd Ranch Guide (3rd Edition)
+	** Android Programming - The Big Nerd Ranch Guide (3rd Edition)
 
 ## Permissions
 * Location (Fine/Coarse)
 * Camera
-^ Internet
+* Internet
 
 ## Version 
 * Version 1.0
