@@ -44,6 +44,7 @@
 
 #### Code
 * Algorithm to calculate distance between two Locations (Latitude, Longitude)
+	
 	** https://www.movable-type.co.uk/scripts/latlong.html
 
 * Code to impletement sensors
