@@ -6,23 +6,23 @@
 (3) Search up your area to see what routes are popular around you
 
 #### Screenshots
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171210-181251.png )]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171210-181251.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171210-181251.png )]]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171210-181251.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185723.png )]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185723.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185723.png )]]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185723.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185726.png )]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185726.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185726.png )]]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185726.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185743.png )]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185743.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185743.png )]]( https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185743.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185816.png )](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185816.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185816.png )]](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185816.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )]](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )]](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185822.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185830.png )](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185830.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185830.png )]](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185830.png )
 
-[!(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185840.png )](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185840.png )
+[![(https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185840.png )]](https://github.com/CSC-285-Fall-2017/FinalProject-nickumia/blob/master/Screenshots/Screenshot_20171211-185840.png )
 
 <!-- #### App Stores *(add this section if deploy to Google Play store only)*
 <!-- edit this image location -->
