@@ -1,6 +1,7 @@
 *Z-Track*
 ======
 **Z-Track** is an app designed to ... 
+	
 	(1) Track and review your regimens to improve your workout and overall fitness.  
 	
 	(2) Learn about new trails and compete with others for best time, longest sustained speed or another goal.  Leave your own codename for others to challenge.
