@@ -47,25 +47,33 @@
 	** https://www.movable-type.co.uk/scripts/latlong.html
 
 * Code to impletement sensors
+
 	** http://www.vogella.com/tutorials/AndroidSensor/article.html
 
 * Draw a path on a Google Map (Mesh of..)
+
 	** https://www.androidtutorialpoint.com/intermediate/google-maps-draw-path-two-points-using-google-directions-google-map-android-api-v2/
+
 	** https://stackoverflow.com/questions/30249920/how-to-draw-path-as-i-move-starting-from-my-current-location-using-google-maps
 
 * Implementing SharedPreferences
+
 	** https://developer.android.com/reference/android/app/Activity.html#SavingPersistentState
 
 * Creating a Stopwatch
+
 	** https://www.android-examples.com/android-create-stopwatch-example-tutorial-in-android-studio/
 
 * Controlling Markers on Google Maps
+
 	** https://developers.google.com/maps/documentation/android-api/marker
 
 * Update SQLite DB based on two columns
+
 	** https://stackoverflow.com/questions/32152966/update-sqlite-with-multiple-column-values
 
 * Some Code Partially Adapted from
+
 	** Android Programming - The Big Nerd Ranch Guide (3rd Edition)
 
 ## Permissions
