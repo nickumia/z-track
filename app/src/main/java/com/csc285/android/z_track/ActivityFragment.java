@@ -653,7 +653,8 @@ public class ActivityFragment extends Fragment implements
         }
 
         updateUI();
-        drawPath();
+        drawMarkers();
+//        drawPath();
     }
 
     void updateTime(){
@@ -912,9 +913,9 @@ public class ActivityFragment extends Fragment implements
     private void drawPath(){
 
         if (mMap != null) {
-            mMap.clear();  //clears all Markers and Polylines
+//            mMap.clear();  //clears all Markers and Polylines
 
-            for(int i = 0; i < IMPORTNAT_INDEX; i++) {
+//            for(int i = 0; i < IMPORTNAT_INDEX; i++) {
 //            mDistance.clear();
                 PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
                 if (mTracking.getPath().size() > 0) {
@@ -925,20 +926,21 @@ public class ActivityFragment extends Fragment implements
                     }
                 }
 //            addMarkerImage(); //add Marker in current position
+//            System.out.println("drewpath");
                 path = mMap.addPolyline(options); //add Polyline
-            }
+//            }
 
-            ArrayList<Location> m = mTracking.getMarkers();
-            ArrayList<String> ms = mTracking.getMarkerTitles();
-//            ArrayList<String> mi = mEvent.getMarkers();
-
-
-            for (int i = 0; i < m.size(); i++) {
-                if (i < mEvent.getPhotoSize()) {
-                    File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
-                    showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
-                }
-            }
+//            ArrayList<Location> m = mTracking.getMarkers();
+//            ArrayList<String> ms = mTracking.getMarkerTitles();
+////            ArrayList<String> mi = mEvent.getMarkers();
+//
+//
+//            for (int i = 0; i < m.size(); i++) {
+//                if (i < mEvent.getPhotoSize()) {
+//                    File photoFile = EventLab.get(getActivity()).getPhotoFile(mEvent, i);
+//                    showMarker(m.get(i).getLatitude(), m.get(i).getLongitude(), ms.get(i), photoFile);
+//                }
+//            }
         }
     }
 
@@ -960,7 +962,12 @@ public class ActivityFragment extends Fragment implements
             LatLng latLng = new LatLng(mTracking.getCurrent().getLatitude(), mTracking.getCurrent().getLongitude());
             if (mTracking != null){
                 mTracking.addToPath(latLng);
-//                IMPORTNAT_INDEX++;
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
+                        LatLng(mTracking.getCurrent().getLatitude(),
+                        mTracking.getCurrent().getLongitude()), 18.0f));
+
+                drawPath();
+                IMPORTNAT_INDEX++;
                 mElevation.setElevation(mTracking.getCurrent().getAltitude());
                 mVelocity.setVelocity(mTracking.getCurrent().getSpeed());
 //                mVelocityAvg.setVelocities(mVelocity.getVelocities());
